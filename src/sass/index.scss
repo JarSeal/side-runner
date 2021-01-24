@@ -1,0 +1,16 @@
+*,*:before,*:after {
+    user-select: none;
+    -webkit-user-select: none;
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background: #000;
+    overflow: hidden;
+    font-family: sans-serif;
+}
+canvas {
+    display: block;
+}
