@@ -57,8 +57,8 @@ class Level {
         if(player.body.position.y < -20) {
             // DEAD!
             alert('WASTED!');
-            this.sceneState.player.actionStopMove('left');
-            this.sceneState.player.actionStopMove('right');
+            this.sceneState.playerClass.actionStopMove('left');
+            this.sceneState.playerClass.actionStopMove('right');
             const startPos = this.getStartPosition();
             player.body.quaternion.set(0, 0, 0, 1);
             player.body.velocity.setZero();
