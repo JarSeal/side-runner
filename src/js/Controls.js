@@ -1,10 +1,9 @@
-import * as THREE from 'three';
-import * as CANNON from 'cannon';
 
 class Controls {
     constructor(sceneState, player) {
         this.sceneState = sceneState;
         this.initKeyListeners(player);
+        this.keysDown = {};
     }
 
     initKeyListeners(player) {
@@ -15,11 +14,26 @@ class Controls {
                 break;
             case 'KeyA':
             case 'ArrowLeft':
-                player.actionMove('left');
+                this.keysDown.left = false;
+                player.actionStopMove('left');
                 break;
             case 'KeyD':
             case 'ArrowRight':
-                player.actionMove('right');
+                this.keysDown.right = false;
+                player.actionStopMove('right');
+            }
+        });
+        document.addEventListener('keydown', event => {
+            switch(event.code) {
+            case 'KeyA':
+            case 'ArrowLeft':
+                !this.keysDown.left ? player.actionMove('left') : null;
+                this.keysDown.left = true;
+                break;
+            case 'KeyD':
+            case 'ArrowRight':
+                !this.keysDown.right ? player.actionMove('right') : null;
+                this.keysDown.right = true;
             }
         });
     }

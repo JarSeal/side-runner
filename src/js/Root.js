@@ -45,6 +45,7 @@ class Root {
         const world = new CANNON.World();
         world.gravity.set(0, -9.82, 0);
         world.broadphase = new CANNON.NaiveBroadphase();
+        world.iterations = 10;
         world.solver.iterations = 10;
         this.sceneState.physics = {};
         this.sceneState.physics.world = world;
@@ -72,6 +73,7 @@ class Root {
         this.sceneState.resizeFns = [this.resize],
         this.sceneState.getScreenResolution = this.getScreenResolution;
         this.sceneState.defaultSettings = {
+            showPhysicsHelpers: false,
             showStats: true
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
@@ -98,7 +100,7 @@ class Root {
 
         const level = new Level(sceneState);
         const player = new Player(sceneState, level);
-        const controls = new Controls(sceneState, player);
+        new Controls(sceneState, player);
         sceneState.level = level;
         sceneState.player = player;
 
