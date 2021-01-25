@@ -166,6 +166,8 @@ class Root {
         const pixelRatio = window.devicePixelRatio || 1;
         document.getElementsByTagName('body')[0].style.width = width + 'px';
         document.getElementsByTagName('body')[0].style.height = height + 'px';
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
         renderer.setSize(width, height);
         renderer.setPixelRatio(pixelRatio);
     }
