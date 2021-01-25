@@ -134,22 +134,28 @@ class Root {
     }
 
     updatePhysics(delta) {
-        let i;
+        let i, shape;
         const l = this.sceneState.physics.shapesLength,
             s = this.sceneState.physics.shapes,
             settings = this.sceneState.settings;
         this.world.step(this.sceneState.physics.timeStep, delta, this.sceneState.physics.maxSubSteps);
         for(i=0; i<l; i++) {
-            s[i].mesh.position.copy(s[i].body.position);
-            s[i].mesh.quaternion.copy(s[i].body.quaternion);
+            shape = s[i];
+            shape.body.position.z = 0;
+            shape.body.quaternion.x = 0;
+            shape.body.quaternion.y = 0;
+            shape.mesh.position.copy(shape.body.position);
+            shape.mesh.quaternion.copy(shape.body.quaternion);
         }
         if(settings.showPhysicsHelpers) this.helper.update();
     }
 
-    addShapeToPhysics = (mesh, body, helperColor) => {
+    addShapeToPhysics = (mesh, body, moving, helperColor) => {
         if(!this.sceneState.settings.showPhysicsHelpers) this.scene.add(mesh);
         this.world.addBody(body);
-        this.sceneState.physics.shapes.push({ mesh, body });
+        if(moving) {
+            this.sceneState.physics.shapes.push({ mesh, body });
+        }
         this.sceneState.physics.shapesLength = this.sceneState.physics.shapes.length;
         if(this.sceneState.settings.showPhysicsHelpers) this.helper.addVisual(body, helperColor || 0xFFFFFF);
     }

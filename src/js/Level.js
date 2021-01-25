@@ -20,7 +20,7 @@ class Level {
             position: new CANNON.Vec3(gPos[0] / 2, gPos[1] / 2, gPos[2] / 2),
             shape: new CANNON.Box(new CANNON.Vec3(gSize[0] / 2, gSize[1] / 2, gSize[2] / 2))
         });
-        this.sceneState.physics.addShape(groundMesh, groundBody);
+        this.sceneState.physics.addShape(groundMesh, groundBody, false);
 
         // Add upper level
 
