@@ -6,7 +6,7 @@ class Player {
         this.sceneState = sceneState;
         this.player = {
             maxSpeed: 5,
-            jumpStrength: 7,
+            maxJumpStrength: 8,
             moveButtonDown: {
                 left: false,
                 right: false,
@@ -42,8 +42,14 @@ class Player {
         return this.player;
     }
 
-    actionJump() {
-        this.player.body.velocity.y = this.player.jumpStrength;
+    actionJump(startTime) {
+        const maxTarget = 400; // ms
+        let time = performance.now() - startTime;
+        console.log(time);
+        if(time > maxTarget) time = maxTarget - (time - maxTarget);
+        if(time < 200) time = 200;
+        const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
+        this.player.body.velocity.y = jumpStrength;
     }
 
     actionMove(dir) {

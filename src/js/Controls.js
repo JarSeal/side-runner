@@ -10,7 +10,8 @@ class Controls {
         document.addEventListener('keyup', event => {
             switch(event.code) {
             case 'Space':
-                player.actionJump();
+                player.actionJump(this.keysDown.space);
+                this.keysDown.space = null;
                 break;
             case 'KeyA':
             case 'ArrowLeft':
@@ -25,6 +26,9 @@ class Controls {
         });
         document.addEventListener('keydown', event => {
             switch(event.code) {
+            case 'Space':
+                !this.keysDown.space ? this.keysDown.space = performance.now() : null;
+                break;
             case 'KeyA':
             case 'ArrowLeft':
                 !this.keysDown.left ? player.actionMove('left') : null;

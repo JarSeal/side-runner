@@ -44,8 +44,8 @@ class Level {
         this.sceneState.physics.addShape(ground2Mesh, ground2Body, false);
 
         // Add another level
-        const g3Pos = [8, 6, 0];
-        const ground3Mesh = ground2Mesh.clone();
+        // const g3Pos = [8, 6, 0];
+        // const ground3Mesh = ground2Mesh.clone();
 
     }
 
