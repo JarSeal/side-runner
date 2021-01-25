@@ -12,7 +12,8 @@ class Player {
                 right: false,
                 leftInterval: null,
                 rightInterval: null
-            }
+            },
+            canJump: false
         };
         this.createPlayer(level);
     }
@@ -36,6 +37,27 @@ class Player {
         this.sceneState.physics.addShape(boxMesh, boxBody, true, 0xFF0000);
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
+        this.collisionDetection(boxBody);
+    }
+
+    collisionDetection(body) {
+        let contactNormal = new CANNON.Vec3(); // Normal in the contact, pointing *out* of whatever the player touched
+        const upAxis = new CANNON.Vec3(0,1,0);
+        body.addEventListener("collide", (e) => {
+            const contact = e.contact;
+
+            // contact.bi and contact.bj are the colliding bodies, and contact.ni is the collision normal.
+            // We do not yet know which one is which! Let's check.
+            if(contact.bi.id == body.id) { // bi is the player body, flip the contact normal
+                contact.ni.negate(contactNormal);
+            } else {
+                contactNormal.copy(contact.ni); // bi is something else. Keep the normal as it is
+            }
+            // If contactNormal.dot(upAxis) is between 0 and 1, we know that the contact normal is somewhat in the up direction.
+            if(contactNormal.dot(upAxis) > 0.5) { // Use a "good" threshold value between 0 and 1 here!
+                this.player.canJump = true;    
+            }
+        });
     }
 
     getPlayer() {
@@ -43,13 +65,16 @@ class Player {
     }
 
     actionJump(startTime) {
-        const maxTarget = 400; // ms
-        let time = performance.now() - startTime;
-        console.log(time);
-        if(time > maxTarget) time = maxTarget - (time - maxTarget);
-        if(time < 200) time = 200;
-        const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
-        this.player.body.velocity.y = jumpStrength;
+        if(this.player.canJump) {
+            const maxTarget = 400; // ms
+            let time = performance.now() - startTime;
+            console.log(time);
+            if(time > maxTarget) time = maxTarget - (time - maxTarget);
+            if(time < 200) time = 200;
+            const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
+            this.player.body.velocity.y = jumpStrength;
+        }
+        this.player.canJump = false;
     }
 
     actionMove(dir) {

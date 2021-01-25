@@ -74,7 +74,8 @@ class Root {
         this.sceneState.getScreenResolution = this.getScreenResolution;
         this.sceneState.defaultSettings = {
             showPhysicsHelpers: false,
-            showStats: true
+            showStats: true,
+            lockCamera: true,
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
         this.initResizer();
@@ -83,6 +84,7 @@ class Root {
         // GUI setup [START]
         const gui = new GUI();
         gui.close();
+        gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
             document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
         });
@@ -99,10 +101,11 @@ class Root {
         camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         const level = new Level(sceneState);
-        const player = new Player(sceneState, level);
-        new Controls(sceneState, player);
+        const playerClass = new Player(sceneState, level);
+        new Controls(sceneState, playerClass);
         sceneState.level = level;
-        sceneState.player = player;
+        sceneState.playerClass = playerClass;
+        sceneState.player = playerClass.getPlayer();
 
         // Main app logic [/END]
 
@@ -114,7 +117,7 @@ class Root {
     renderLoop = () => {
         requestAnimationFrame(this.renderLoop);
         const delta = this.sceneState.clock.getDelta();
-        const player = this.sceneState.player.getPlayer();
+        const player = this.sceneState.player;
         this.updatePhysics(delta);
         this.updateCamera(player);
         this.sceneState.level.isPlayerDead(player);
@@ -123,6 +126,7 @@ class Root {
     }
 
     updateCamera(player) {
+        if(!this.sceneState.settings.lockCamera) return;
         this.camera.position.set(
             player.body.position.x + 1,
             player.body.position.y + 1,
