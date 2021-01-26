@@ -10,16 +10,19 @@ class Controls {
         document.addEventListener('keydown', event => {
             switch(event.code) {
             case 'Space':
-                !this.keysDown.space ? this.keysDown.space = performance.now() : null;
+                if(!this.keysDown.space) {
+                    this.keysDown.space = performance.now();
+                    this.sceneState.uiClass.updateJumpMeter(this.keysDown.space);
+                }
                 break;
             case 'KeyA':
             case 'ArrowLeft':
-                !this.keysDown.left ? playerClass.actionMove('left') : null;
+                if(!this.keysDown.left) playerClass.actionMove('left');
                 this.keysDown.left = true;
                 break;
             case 'KeyD':
             case 'ArrowRight':
-                !this.keysDown.right ? playerClass.actionMove('right') : null;
+                if(!this.keysDown.right) playerClass.actionMove('right');
                 this.keysDown.right = true;
             }
         });
@@ -27,6 +30,7 @@ class Controls {
             switch(event.code) {
             case 'Space':
                 playerClass.actionJump(this.keysDown.space, this.keysDown.space2);
+                this.sceneState.uiClass.updateJumpMeter(null);
                 this.keysDown.space = null;
                 break;
             case 'KeyA':

@@ -7,6 +7,7 @@ import CannonHelper from './vendor/CannonHelper.js';
 import Level from './Level.js';
 import Player from './Player.js';
 import Controls from './Controls.js';
+import UI from './UI/UI.js';
 
 class Root {
     constructor() {
@@ -35,10 +36,11 @@ class Root {
         // Setup camera and aspect ratio [START]
         this.aspectRatio = screenSize.x / screenSize.y;
         const camera = new THREE.PerspectiveCamera(45, this.aspectRatio, 0.1, 64);
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.update();
-        this.controls = controls;
+        const cameraControls = new OrbitControls(camera, renderer.domElement);
+        cameraControls.update();
+        this.cameraControls = cameraControls;
         this.camera = camera;
+        this.sceneState.camera = camera;
         // Setup camera and aspect ratio [/END]
 
         // Setup physics (cannon.js) [START]
@@ -104,9 +106,10 @@ class Root {
         const level = new Level(sceneState);
         const playerClass = new Player(sceneState, level);
         new Controls(sceneState, playerClass);
-        sceneState.level = level;
+        sceneState.levelClass = level;
         sceneState.playerClass = playerClass;
         sceneState.player = playerClass.getPlayer();
+        sceneState.uiClass = new UI(sceneState);
 
         // Main app logic [/END]
 
@@ -121,7 +124,8 @@ class Root {
         const player = this.sceneState.player;
         this.updatePhysics(delta);
         this.updateCamera(player);
-        this.sceneState.level.isPlayerDead(player);
+        this.sceneState.uiClass.renderLoop(this.sceneState);
+        this.sceneState.levelClass.isPlayerDead(player);
         this.renderer.render(this.scene, this.camera);
         if(this.sceneState.settings.showStats) this.stats.update(); // Debug statistics
     }
@@ -173,8 +177,8 @@ class Root {
         const pixelRatio = window.devicePixelRatio || 1;
         document.getElementsByTagName('body')[0].style.width = width + 'px';
         document.getElementsByTagName('body')[0].style.height = height + 'px';
-        this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
+        sceneState.camera.aspect = width / height;
+        sceneState.camera.updateProjectionMatrix();
         renderer.setSize(width, height);
         renderer.setPixelRatio(pixelRatio);
     }

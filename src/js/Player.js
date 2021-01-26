@@ -7,6 +7,7 @@ class Player {
         this.player = {
             maxSpeed: 5,
             maxJumpStrength: 8,
+            maxJumpTarget: 200, // ms
             moveButtonDown: {
                 left: false,
                 right: false,
@@ -86,11 +87,15 @@ class Player {
     actionJump(startTime) {
         this.player.body.wakeUp();
         if(this.isPlayerGrounded()) {
-            const maxTarget = 400; // ms
+            const maxTarget = this.player.maxJumpTarget;
             let time = performance.now() - startTime;
             console.log(time);
-            if(time > maxTarget) time = maxTarget - (time - maxTarget);
-            if(time < 200) time = 200;
+            if(time > maxTarget && time < maxTarget + 100) {
+                time = maxTarget;
+            } else if(time > maxTarget) {
+                time = maxTarget - (time - maxTarget);
+            }
+            if(time < 50) time = 50;
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
         }
