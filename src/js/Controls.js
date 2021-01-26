@@ -6,7 +6,7 @@ class Controls {
         this.keysDown = {};
     }
 
-    initKeyListeners(playerClass) {
+    initKeyListeners = (playerClass) => {
         document.addEventListener('keydown', event => {
             switch(event.code) {
             case 'Space':
@@ -24,7 +24,12 @@ class Controls {
             case 'ArrowRight':
                 if(!this.keysDown.right) playerClass.actionMove('right');
                 this.keysDown.right = true;
+                break;
+            case 'ShiftLeft':
+                this.keysDown.shiftLeft = true;
+                break;
             }
+            this.sceneState.keysDown = this.keysDown;
         });
         document.addEventListener('keyup', event => {
             switch(event.code) {
@@ -42,7 +47,12 @@ class Controls {
             case 'ArrowRight':
                 this.keysDown.right = false;
                 playerClass.actionStopMove('right');
+                break;
+            case 'ShiftLeft':
+                this.keysDown.shiftLeft = false;
+                break;
             }
+            this.sceneState.keysDown = this.keysDown;
         });
     }
 }

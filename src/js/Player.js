@@ -40,6 +40,7 @@ class Player {
         this.sceneState.physics.addShape(boxMesh, boxBody, true, 0xFF0000);
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
+        this.player.mesh.scale.x = 0.5;
         this.setupCollisionEvent(boxBody);
     }
 
@@ -101,9 +102,10 @@ class Player {
         }
     }
 
-    actionMove(dir) {
+    actionMove = (dir) => {
         let velo = this.player.body.velocity,
-            directionInfluence = 1;
+            aVelo = this.player.body.angularVelocity;
+        console.log(this.sceneState.keysDown);
         this.player.body.wakeUp();
         this.player.moveButtonDown[dir] = true;
         clearInterval(this.player.moveButtonDown[dir+'Interval']);
@@ -114,13 +116,27 @@ class Player {
             }
             if(Math.abs(velo.x) < this.player.maxSpeed) {
                 if(dir === 'left') {
-                    velo.x -= .4;
-                    directionInfluence = -1;
+                    if(this.sceneState.keysDown.shiftLeft) {
+                        // if(!this.isPlayerGrounded()) {
+                            aVelo.z += 0.8;
+                        // }
+                    } else {
+                        velo.x -= 0.4;
+                    }
                 } else if(dir === 'right') {
-                    velo.x += .4;
+                    if(this.sceneState.keysDown.shiftLeft) {
+                        // if(!this.isPlayerGrounded()) {
+                            aVelo.z -= 0.8;
+                        // }
+                    } else {
+                        velo.x += 0.4;
+                    }
                 }
                 if(Math.abs(velo.x) > this.player.maxSpeed) {
-                    velo.x = this.player.maxSpeed * directionInfluence;
+                    velo.x = this.player.maxSpeed * (dir == 'left' ? -1 : 1);
+                }
+                if(Math.abs(aVelo.z) > this.player.maxSpeed) {
+                    aVelo.z = this.player.maxSpeed * (dir == 'right' ? -1 : 1);
                 }
             }
         }, 20);
