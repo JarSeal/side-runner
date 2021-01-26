@@ -7,7 +7,7 @@ class Player {
         this.player = {
             maxSpeed: 5,
             maxJumpStrength: 8,
-            maxJumpTarget: 200, // ms
+            maxJumpTarget: 300, // ms
             moveButtonDown: {
                 left: false,
                 right: false,
@@ -95,7 +95,7 @@ class Player {
             } else if(time > maxTarget) {
                 time = maxTarget - (time - maxTarget);
             }
-            if(time < 50) time = 50;
+            if(time < 170) time = 170;
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
         }
