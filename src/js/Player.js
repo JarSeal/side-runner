@@ -105,7 +105,7 @@ class Player {
     actionMove = (dir) => {
         let velo = this.player.body.velocity,
             aVelo = this.player.body.angularVelocity;
-        console.log(this.sceneState.keysDown);
+        console.log('test', this.sceneState.keysDown);
         this.player.body.wakeUp();
         this.player.moveButtonDown[dir] = true;
         clearInterval(this.player.moveButtonDown[dir+'Interval']);
@@ -116,20 +116,30 @@ class Player {
             }
             if(Math.abs(velo.x) < this.player.maxSpeed) {
                 if(dir === 'left') {
-                    if(this.sceneState.keysDown.shiftLeft) {
-                        // if(!this.isPlayerGrounded()) {
+                    if(!this.isPlayerGrounded()) {
+                        if(!this.sceneState.keysDown.shiftLeft) {
                             aVelo.z += 0.8;
-                        // }
-                    } else {
+                        }
                         velo.x -= 0.4;
+                    } else {
+                        if(this.sceneState.keysDown.shiftLeft) {
+                            aVelo.z += 0.8;
+                        } else {
+                            velo.x -= 0.4;
+                        }
                     }
                 } else if(dir === 'right') {
-                    if(this.sceneState.keysDown.shiftLeft) {
-                        // if(!this.isPlayerGrounded()) {
+                    if(!this.isPlayerGrounded()) {
+                        if(!this.sceneState.keysDown.shiftLeft) {
                             aVelo.z -= 0.8;
-                        // }
-                    } else {
+                        }
                         velo.x += 0.4;
+                    } else {
+                        if(this.sceneState.keysDown.shiftLeft) {
+                            aVelo.z -= 0.8;
+                        } else {
+                            velo.x += 0.4;
+                        }
                     }
                 }
                 if(Math.abs(velo.x) > this.player.maxSpeed) {
