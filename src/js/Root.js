@@ -43,6 +43,7 @@ class Root {
 
         // Setup physics (cannon.js) [START]
         const world = new CANNON.World();
+        world.allowSleep = true;
         world.gravity.set(0, -9.82, 0);
         world.broadphase = new CANNON.NaiveBroadphase();
         world.iterations = 10;

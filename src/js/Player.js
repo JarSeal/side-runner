@@ -12,8 +12,7 @@ class Player {
                 right: false,
                 leftInterval: null,
                 rightInterval: null
-            },
-            canJump: false
+            }
         };
         this.createPlayer(level);
     }
@@ -34,18 +33,27 @@ class Player {
             shape: new CANNON.Box(new CANNON.Vec3(bSize[0] / 2, bSize[1] / 2, bSize[2] / 2)),
             material: boxMaterial
         });
+        boxBody.allowSleep = true;
+        boxBody.sleepSpeedLimit = 0.1;
+        boxBody.sleepTimeLimit = 1;
         this.sceneState.physics.addShape(boxMesh, boxBody, true, 0xFF0000);
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
-        this.collisionDetection(boxBody);
+        this.setupCollisionEvent(boxBody);
     }
 
-    collisionDetection(body) {
-        let contactNormal = new CANNON.Vec3(); // Normal in the contact, pointing *out* of whatever the player touched
-        const upAxis = new CANNON.Vec3(0,1,0);
-        body.addEventListener("collide", (e) => {
-            const contact = e.contact;
+    isPlayerGrounded() {
+        let curY = parseFloat(this.player.body.position.y).toFixed(5);
+        return performance.now() - this.player.lastCollisionTime < 100 ||
+            (parseFloat(this.player.lastCollisionHeight) > parseFloat(curY) - 0.1 &&
+            parseFloat(this.player.lastCollisionHeight) < parseFloat(curY) + 0.1);
+    }
 
+    setupCollisionEvent(body) {
+        let contactNormal = new CANNON.Vec3(); // Normal in the contact, pointing *out* of whatever the player touched
+        const upAxis = new CANNON.Vec3(0, 1, 0);
+        body.addEventListener('collide', (e) => {
+            const contact = e.contact;
             // contact.bi and contact.bj are the colliding bodies, and contact.ni is the collision normal.
             // We do not yet know which one is which! Let's check.
             if(contact.bi.id == body.id) { // bi is the player body, flip the contact normal
@@ -55,9 +63,20 @@ class Player {
             }
             // If contactNormal.dot(upAxis) is between 0 and 1, we know that the contact normal is somewhat in the up direction.
             if(contactNormal.dot(upAxis) > 0.5) { // Use a "good" threshold value between 0 and 1 here!
-                this.player.canJump = true;    
+                this.player.lastCollisionTime = performance.now();
+                this.player.lastCollisionHeight = parseFloat(body.position.y).toFixed(5);
             }
         });
+        // let prevY = 0;
+        // setInterval(() => {
+        //     if(body.sleepState !== 2) {
+        //         const curY = parseFloat(body.position.y).toFixed(5);
+        //         if(body.position.y === prevY) {
+        //             this.player.lastCollisionHeight = curY;
+        //         }
+        //         prevY = curY;
+        //     }
+        // }, 200);
     }
 
     getPlayer() {
@@ -65,7 +84,8 @@ class Player {
     }
 
     actionJump(startTime) {
-        if(this.player.canJump) {
+        this.player.body.wakeUp();
+        if(this.isPlayerGrounded()) {
             const maxTarget = 400; // ms
             let time = performance.now() - startTime;
             console.log(time);
@@ -74,13 +94,14 @@ class Player {
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
         }
-        this.player.canJump = false;
     }
 
     actionMove(dir) {
         let velo = this.player.body.velocity,
             directionInfluence = 1;
+        this.player.body.wakeUp();
         this.player.moveButtonDown[dir] = true;
+        clearInterval(this.player.moveButtonDown[dir+'Interval']);
         this.player.moveButtonDown[dir+'Interval'] = setInterval(() => {
             if(!this.player.moveButtonDown[dir]) {
                 clearInterval(this.player.moveButtonDown[dir+'Interval']);
@@ -104,6 +125,7 @@ class Player {
         this.player.moveButtonDown[dir] = false;
         clearInterval(this.player.moveButtonDown[dir+'Interval']);
         this.player.moveButtonDown[dir+'Interval'] = null;
+        this.player.body.wakeUp();
     }
 }
 

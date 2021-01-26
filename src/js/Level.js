@@ -44,8 +44,19 @@ class Level {
         this.sceneState.physics.addShape(ground2Mesh, ground2Body, false);
 
         // Add another level
-        // const g3Pos = [8, 6, 0];
-        // const ground3Mesh = ground2Mesh.clone();
+        const g3Size = [2, 0.2, 2];
+        const g3Pos = [15, 1.5, 0];
+        const ground3Geo = new THREE.BoxBufferGeometry(g3Size[0], g3Size[1], g3Size[2]);
+        const ground3Mat = new THREE.MeshLambertMaterial({ color: 0x666666 });
+        const ground3Mesh = new THREE.Mesh(ground3Geo, ground3Mat);
+        ground3Mesh.position.set(g3Pos[0], g3Pos[1], g3Pos[2]);
+        const ground3Body = new CANNON.Body({
+            mass: 0,
+            position: new CANNON.Vec3(g3Pos[0], g3Pos[1], g3Pos[2]),
+            shape: new CANNON.Box(new CANNON.Vec3(g3Size[0] / 2, g3Size[1] / 2, g3Size[2] / 2)),
+            material: groundMaterial
+        });
+        this.sceneState.physics.addShape(ground3Mesh, ground3Body, false, 0xff0000, true);
 
     }
 
