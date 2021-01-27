@@ -124,7 +124,7 @@ class Root {
         requestAnimationFrame(this.renderLoop);
         const delta = this.sceneState.clock.getDelta();
         const player = this.sceneState.player;
-        this.updatePhysics(delta, player);
+        this.updatePhysics(delta);
         this.updateCamera(player);
         this.sceneState.uiClass.renderLoop(this.sceneState);
         this.sceneState.levelClass.isPlayerDead(player);
@@ -146,7 +146,7 @@ class Root {
         ));
     }
 
-    updatePhysics(delta, player) {
+    updatePhysics(delta) {
         let i, shape;
         const l = this.sceneState.physics.shapesLength,
             s = this.sceneState.physics.shapes,
