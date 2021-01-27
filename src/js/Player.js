@@ -115,7 +115,7 @@ class Player {
                                 bodyPos.z = 0;
                                 clearInterval(this.player.zIroning);
                                 this.player.zIroning = false;
-                                this.doTumbling();
+                                this.doTumbling(true);
                             }
                         }, 10);
                     }
@@ -158,55 +158,55 @@ class Player {
     }
 
     actionMove = (dir) => {
+        console.log('MOVE', dir);
         let velo = this.player.body.velocity,
             aVelo = this.player.body.angularVelocity;
         this.player.body.wakeUp();
         this.player.moveButtonDown[dir] = true;
-        clearInterval(this.player.moveButtonDown[dir+'Interval']);
+        clearInterval(this.player.moveButtonDown['rightInterval']);
+        clearInterval(this.player.moveButtonDown['leftInterval']);
         this.player.moveButtonDown[dir+'Interval'] = setInterval(() => {
             if(!this.player.moveButtonDown[dir]) {
                 clearInterval(this.player.moveButtonDown[dir+'Interval']);
                 return;
             }
-            if(Math.abs(velo.x) < this.player.maxSpeed) {
-                if(dir === 'left') {
-                    if(!this.isPlayerGrounded()) {
-                        aVelo.z += 0.8;
+            if(dir === 'left') {
+                if(!this.isPlayerGrounded()) {
+                    aVelo.z += 0.8;
+                    velo.x -= 0.4;
+                } else {
+                    if(this.sceneState.keysDown.shiftLeft) {
+                        velo.x += 0.2; // Break
+                        if(velo.x > 0) velo.x = 0;
+                    } else {
                         velo.x -= 0.4;
-                    } else {
-                        if(this.sceneState.keysDown.shiftLeft) {
-                            velo.x += 0.2; // Break
-                            if(velo.x > 0) velo.x = 0;
-                        } else {
-                            velo.x -= 0.4;
-                        }
                     }
-                    this.changeDirection(1);
-                } else if(dir === 'right') {
-                    if(!this.isPlayerGrounded()) {
-                        aVelo.z -= 0.8;
+                }
+                this.changeDirection(1);
+            } else if(dir === 'right') {
+                if(!this.isPlayerGrounded()) {
+                    aVelo.z -= 0.8;
+                    velo.x += 0.4;
+                } else {
+                    if(this.sceneState.keysDown.shiftLeft) {
+                        velo.x -= 0.2; // Break
+                        if(velo.x < 0) velo.x = 0;
+                    } else {
                         velo.x += 0.4;
-                    } else {
-                        if(this.sceneState.keysDown.shiftLeft) {
-                            velo.x -= 0.2; // Break
-                            if(velo.x < 0) velo.x = 0;
-                        } else {
-                            velo.x += 0.4;
-                        }
                     }
-                    this.changeDirection(0);
                 }
-                if(Math.abs(velo.x) > this.player.maxSpeed) {
-                    velo.x = this.player.maxSpeed * (dir == 'left' ? -1 : 1);
-                }
-                if(Math.abs(aVelo.z) > this.player.maxTumblingSpeed) {
-                    aVelo.z = this.player.maxSpeed * (dir == 'right' ? -1 : 1);
-                }
-                if(Math.abs(aVelo.z) > this.player.maxTumblingSpeed * 0.9) {
-                    this.doTumbling();
-                }
-                this.player.zDirPhase = this.player.body.quaternion.z;
+                this.changeDirection(0);
             }
+            if(Math.abs(velo.x) > this.player.maxSpeed) {
+                velo.x = this.player.maxSpeed * (dir == 'left' ? -1 : 1);
+            }
+            if(Math.abs(aVelo.z) > this.player.maxTumblingSpeed) {
+                aVelo.z = this.player.maxSpeed * (dir == 'right' ? -1 : 1);
+            }
+            if(Math.abs(aVelo.z) > this.player.maxTumblingSpeed * 0.9) {
+                this.doTumbling();
+            }
+            this.player.zDirPhase = this.player.body.quaternion.z;
         }, 20);
     }
 
