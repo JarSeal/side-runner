@@ -12,6 +12,7 @@ class UI {
 
     createUI() {
         this.createJumpMeter();
+        this.createVelocityMeters();
     }
 
     resize = (sceneState) => {
@@ -27,7 +28,7 @@ class UI {
                 </div>
             </div>
         `;
-        this.mainUiElem.innerHTML = html;
+        this.mainUiElem.innerHTML += html;
         this.elems.jumpMeter = document.getElementById('jumpGauge');
         this.anims.jumpMeter = {
             run: false,
@@ -57,6 +58,23 @@ class UI {
             this.anims.jumpMeter.run = false;
             jmElem.style.opacity = 0;
         }
+    }
+
+    createVelocityMeters() {
+        const html = `
+            <div id="veloMeters">
+                <div class="veloMeters__xVelo">
+                    X: <span id="xVelo"></span>
+                </div>
+                <div class="veloMeters__xVelo">
+                    Y: <span id="xVelo"></span>
+                </div>
+                <div class="veloMeters__xVelo">
+                    A: <span id="xVelo"></span>
+                </div>
+            </div>
+        `;
+        this.mainUiElem.innerHTML += html;
     }
     
     renderLoop = (sceneState) => {

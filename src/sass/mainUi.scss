@@ -35,6 +35,14 @@
     transition: opacity 0.2s ease-in-out;
 }
 
+#veloMeters {
+    color: #999;
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    translate: transformZ(-50%);
+}
+
 // For GUI controls
 body > .dg.ac {
     z-index: 105;
