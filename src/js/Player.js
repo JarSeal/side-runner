@@ -10,7 +10,7 @@ class Player {
             causeDamageVeloLimit1: 10,
             causeDamageVeloLimit2: 14,
             maxSpeed: 5,
-            maxTumblingSpeed: 8,
+            maxTumblingSpeed: 15,
             maxJumpStrength: 8,
             maxJumpTarget: 300, // ms
             moveButtonDown: {
@@ -102,9 +102,8 @@ class Player {
                         } else {
                             dir = this.player.body.angularVelocity.z > 0 ? 1: -1;
                         }
-                        if(Math.abs(yVelo) > 4) {
-                            // TEMP TRANSFORMATION, replace with tumbling when model is imported
-                            this.player.mesh.scale.y = 0.5;
+                        if(Math.abs(yVelo) > 5) {
+                            this.doTumbling();
                         }
                         const curRot = this.player.mesh.rotation;
                         let flipCounter = 0;
@@ -116,15 +115,13 @@ class Player {
                                 bodyPos.z = 0;
                                 clearInterval(this.player.zIroning);
                                 this.player.zIroning = false;
-                                // TEMP TRANSFORMATION, replace with tumbling when model is imported
-                                this.player.mesh.scale.y = 1;
+                                this.doTumbling();
                             }
                         }, 10);
                     }
                 } else {
-                    // TEMP TRANSFORMATION, replace with tumbling when model is imported
                     // This is just to set the model straight aftet possible tumbling in the air.
-                    this.player.mesh.scale.y = 1;
+                    this.doTumbling(true);
                 }
             }
         });
@@ -149,7 +146,6 @@ class Player {
         if(this.isPlayerGrounded()) {
             const maxTarget = this.player.maxJumpTarget;
             let time = performance.now() - startTime;
-            console.log(time);
             if(time > maxTarget && time < maxTarget + 100) {
                 time = maxTarget;
             } else if(time > maxTarget) {
@@ -175,7 +171,7 @@ class Player {
             if(Math.abs(velo.x) < this.player.maxSpeed) {
                 if(dir === 'left') {
                     if(!this.isPlayerGrounded()) {
-                        aVelo.z += 0.4;
+                        aVelo.z += 0.8;
                         velo.x -= 0.4;
                     } else {
                         if(this.sceneState.keysDown.shiftLeft) {
@@ -185,12 +181,10 @@ class Player {
                             velo.x -= 0.4;
                         }
                     }
-                    this.player.mesh.children[0].position.x = -0.5; // FOR ROTATING THE DIRECTION INDICATOR
-                    this.player.yDir = 1;
-                    this.player.yDirPhase = 1;
+                    this.changeDirection(1);
                 } else if(dir === 'right') {
                     if(!this.isPlayerGrounded()) {
-                        aVelo.z -= 0.4;
+                        aVelo.z -= 0.8;
                         velo.x += 0.4;
                     } else {
                         if(this.sceneState.keysDown.shiftLeft) {
@@ -200,9 +194,7 @@ class Player {
                             velo.x += 0.4;
                         }
                     }
-                    this.player.mesh.children[0].position.x = 0.5; // FOR ROTATING THE DIRECTION INDICATOR
-                    this.player.yDir = 0;
-                    this.player.yDirPhase = 0;
+                    this.changeDirection(0);
                 }
                 if(Math.abs(velo.x) > this.player.maxSpeed) {
                     velo.x = this.player.maxSpeed * (dir == 'left' ? -1 : 1);
@@ -211,8 +203,7 @@ class Player {
                     aVelo.z = this.player.maxSpeed * (dir == 'right' ? -1 : 1);
                 }
                 if(Math.abs(aVelo.z) > this.player.maxTumblingSpeed * 0.9) {
-                    // TEMP TRANSFORMATION, replace with tumbling when model is imported
-                    this.player.mesh.scale.y = 0.5;
+                    this.doTumbling();
                 }
                 this.player.zDirPhase = this.player.body.quaternion.z;
             }
@@ -222,8 +213,7 @@ class Player {
     actionStopSpin = () => {
         if(!this.isPlayerGrounded()) {
             this.player.body.angularVelocity.z = 0;
-            // TEMP TRANSFORMATION, replace with tumbling when model is imported
-            this.player.mesh.scale.y = 1;
+            this.doTumbling(true);
         } else {
             const velo = this.player.body.velocity;
             if(this.player.stopInterval) clearInterval(this.player.stopInterval);
@@ -253,6 +243,23 @@ class Player {
         clearInterval(this.player.moveButtonDown[dir+'Interval']);
         this.player.moveButtonDown[dir+'Interval'] = null;
         this.player.body.wakeUp();
+    }
+
+    doTumbling(stopTumbling) {
+        if(stopTumbling) {
+            // TEMP TRANSFORMATION, replace with tumbling when model is imported
+            this.player.mesh.scale.y = 1;
+        } else {
+            // TEMP TRANSFORMATION, replace with tumbling when model is imported
+            this.player.mesh.scale.y = 0.5;
+        }
+    }
+
+    changeDirection(newDir) {
+        if(this.player.yDir === newDir) return;
+        this.player.mesh.children[0].position.x = newDir === 0 ? 0.5 : -0.5; // FOR ROTATING THE DIRECTION INDICATOR
+        this.player.yDir = newDir;
+        this.player.yDirPhase = newDir; // TODO, change to animating, when model and anim exists
     }
 }
 
