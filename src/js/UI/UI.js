@@ -67,14 +67,25 @@ class UI {
                     X: <span id="xVelo"></span>
                 </div>
                 <div class="veloMeters__xVelo">
-                    Y: <span id="xVelo"></span>
+                    Y: <span id="yVelo"></span>
                 </div>
                 <div class="veloMeters__xVelo">
-                    A: <span id="xVelo"></span>
+                    A: <span id="aVelo"></span>
                 </div>
             </div>
         `;
         this.mainUiElem.innerHTML += html;
+        this.anims.veloMeters = {
+            run: true,
+            xVeloElem: document.getElementById('xVelo'),
+            yVeloElem: document.getElementById('yVelo'),
+            aVeloElem: document.getElementById('aVelo'),
+            updateFn: (sceneState) => {
+                this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x;
+                this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y;
+                this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z;
+            }
+        };
     }
     
     renderLoop = (sceneState) => {
