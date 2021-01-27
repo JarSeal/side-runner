@@ -78,6 +78,7 @@ class Root {
         this.sceneState.defaultSettings = {
             showPhysicsHelpers: false,
             showStats: true,
+            showVeloMeters: true,
             lockCamera: true,
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
@@ -88,6 +89,7 @@ class Root {
         const gui = new GUI();
         gui.close();
         gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
+        gui.add(this.sceneState.settings, 'showVeloMeters').name('Show velo meters');
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
             document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
         });
@@ -122,7 +124,7 @@ class Root {
         requestAnimationFrame(this.renderLoop);
         const delta = this.sceneState.clock.getDelta();
         const player = this.sceneState.player;
-        this.updatePhysics(delta);
+        this.updatePhysics(delta, player);
         this.updateCamera(player);
         this.sceneState.uiClass.renderLoop(this.sceneState);
         this.sceneState.levelClass.isPlayerDead(player);
@@ -144,7 +146,7 @@ class Root {
         ));
     }
 
-    updatePhysics(delta) {
+    updatePhysics(delta, player) {
         let i, shape;
         const l = this.sceneState.physics.shapesLength,
             s = this.sceneState.physics.shapes,
@@ -157,15 +159,19 @@ class Root {
             shape.body.quaternion.y = 0;
             shape.mesh.position.copy(shape.body.position);
             shape.mesh.quaternion.copy(shape.body.quaternion);
+            if(shape.updateFn) shape.updateFn();
         }
         if(settings.showPhysicsHelpers) this.helper.update();
     }
 
-    addShapeToPhysics = (mesh, body, moving, helperColor) => {
+    addShapeToPhysics = (object, moving, helperColor) => {
+        const mesh = object.mesh,
+            body = object.body,
+            updateFn = object.updateFn || null;
         if(!this.sceneState.settings.showPhysicsHelpers) this.scene.add(mesh);
         this.world.addBody(body);
         if(moving) {
-            this.sceneState.physics.shapes.push({ mesh, body });
+            this.sceneState.physics.shapes.push({ mesh, body, updateFn });
         }
         this.sceneState.physics.shapesLength = this.sceneState.physics.shapes.length;
         if(this.sceneState.settings.showPhysicsHelpers) this.helper.addVisual(body, helperColor || 0xFFFFFF);

@@ -20,7 +20,7 @@ class UI {
         this.mainUiElem.style.height = sceneState.getScreenResolution().y + 'px';
     }
 
-    createJumpMeter() {
+    createJumpMeter = () => {
         const html = `
             <div id="jumpMeter">
                 <div class="gaugeWrapper">
@@ -29,26 +29,27 @@ class UI {
             </div>
         `;
         this.mainUiElem.innerHTML += html;
-        this.elems.jumpMeter = document.getElementById('jumpGauge');
         this.anims.jumpMeter = {
             run: false,
             startTime: null,
-            jmElem: this.elems.jumpMeter,
+            jmElem: document.getElementById('jumpGauge'),
             updateFn: (sceneState) => {
                 const maxTarget = sceneState.player.maxJumpTarget,
                     startTime = this.anims.jumpMeter.startTime;
                 let time = performance.now() - startTime;
                 if(time > 2000) time = 2000;
                 const barPercentage = time / maxTarget * 100;
+                this.anims.jumpMeter.jmElem.style.opacity = 1;
                 this.anims.jumpMeter.jmElem.style.height = barPercentage + '%';
             }
         };
         
     }
 
-    updateJumpMeter(startTime) {
-        const jmElem = this.elems.jumpMeter;
+    updateJumpMeter = (startTime) => {
+        const jmElem = document.getElementById('jumpGauge');
         this.anims.jumpMeter.startTime = startTime;
+        this.anims.jumpMeter.jmElem = jmElem;
         if(startTime) {
             jmElem.style.height = 0;
             jmElem.style.opacity = 1;
@@ -74,18 +75,38 @@ class UI {
                 </div>
             </div>
         `;
-        this.mainUiElem.innerHTML += html;
         this.anims.veloMeters = {
-            run: true,
-            xVeloElem: document.getElementById('xVelo'),
-            yVeloElem: document.getElementById('yVelo'),
-            aVeloElem: document.getElementById('aVelo'),
+            run: this.sceneState.settings.showVeloMeters,
+            html,
+            xVeloElem: null,
+            yVeloElem: null,
+            aVeloElem: null,
             updateFn: (sceneState) => {
-                this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x;
-                this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y;
-                this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z;
+                this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x.toFixed(2);
+                this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y.toFixed(2);
+                this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z.toFixed(2);
+            },
+            removeFn: () => {
+                const elem = document.getElementById('veloMeters');
+                if(elem) elem.remove();
+            },
+            addFn: () => {
+                this.mainUiElem.innerHTML += this.anims.veloMeters.html;
+                this.anims.veloMeters.xVeloElem = document.getElementById('xVelo');
+                this.anims.veloMeters.yVeloElem = document.getElementById('yVelo');
+                this.anims.veloMeters.aVeloElem = document.getElementById('aVelo');
+            },
+            checkSettingsFn: (sceneState) => {
+                if(this.anims.veloMeters.run !== sceneState.settings.showVeloMeters) {
+                    this.anims.veloMeters.removeFn();
+                    if(sceneState.settings.showVeloMeters) {
+                        this.anims.veloMeters.addFn();
+                    }
+                }
+                this.anims.veloMeters.run = sceneState.settings.showVeloMeters;
             }
         };
+        if(this.sceneState.settings.showVeloMeters) this.anims.veloMeters.addFn();
     }
     
     renderLoop = (sceneState) => {
@@ -94,6 +115,7 @@ class UI {
             animKeysLength = animKeys.length;
         for(i=0; i<animKeysLength; i++) {
             const anim = this.anims[animKeys[i]];
+            if(anim.checkSettingsFn) anim.checkSettingsFn(sceneState);
             if(anim.run) {
                 anim.updateFn(sceneState);
             }

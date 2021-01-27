@@ -26,7 +26,7 @@ class Level {
             shape: new CANNON.Box(new CANNON.Vec3(gSize[0] / 2, gSize[1] / 2, gSize[2] / 2)),
             material: groundMaterial
         });
-        this.sceneState.physics.addShape(groundMesh, groundBody, false);
+        this.sceneState.physics.addShape({ mesh: groundMesh, body: groundBody }, false);
 
         // Add upper level
         const g2Size = [5, 0.2, 2];
@@ -41,7 +41,7 @@ class Level {
             shape: new CANNON.Box(new CANNON.Vec3(g2Size[0] / 2, g2Size[1] / 2, g2Size[2] / 2)),
             material: groundMaterial
         });
-        this.sceneState.physics.addShape(ground2Mesh, ground2Body, false);
+        this.sceneState.physics.addShape({ mesh: ground2Mesh, body: ground2Body }, false);
 
         // Add another level
         const g3Size = [2, 0.2, 2];
@@ -56,7 +56,7 @@ class Level {
             shape: new CANNON.Box(new CANNON.Vec3(g3Size[0] / 2, g3Size[1] / 2, g3Size[2] / 2)),
             material: groundMaterial
         });
-        this.sceneState.physics.addShape(ground3Mesh, ground3Body, false, 0xff0000, true);
+        this.sceneState.physics.addShape({ mesh: ground3Mesh, body: ground3Body }, false, 0xff0000, true);
 
     }
 

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon';
+import { TimelineMax } from 'gsap-ssr';
 
 class Player {
     constructor(sceneState, level) {
@@ -7,6 +8,7 @@ class Player {
         this.player = {
             mesh: null,
             body: null,
+            updateFn: this.updateFn,
             causeDamageVeloLimit1: 10,
             causeDamageVeloLimit2: 14,
             maxSpeed: 5,
@@ -24,6 +26,7 @@ class Player {
             zDir: 0,
             zDirPhase: 0,
             tumbling: false,
+            tumblingEndTL: null,
             fullSizeMesh: [0.5, 1, 0.5],
             smallSizeMesh: [0.5, 0.5, 0.5],
             fullSizeBody: [0.25, 0.5, 0.25],
@@ -59,16 +62,15 @@ class Player {
         boxBody.sleepSpeedLimit = 0.1;
         boxBody.sleepTimeLimit = 1;
 
-        this.sceneState.physics.addShape(boxMesh, boxBody, true, 0xFF0000);
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
-        // this.player.mesh.scale.x = 0.5;
+        this.sceneState.physics.addShape(this.player, true, 0xFF0000);
         this.setupCollisionEvent(boxBody);
     }
 
     isPlayerGrounded() {
         let curY = parseFloat(this.player.body.position.y).toFixed(5);
-        return performance.now() - this.player.lastCollisionTime < 100 ||
+        return performance.now() - this.player.lastCollisionTime < 50 ||
             (parseFloat(this.player.lastCollisionHeight) > parseFloat(curY) - 0.1 &&
             parseFloat(this.player.lastCollisionHeight) < parseFloat(curY) + 0.1);
     }
@@ -127,6 +129,15 @@ class Player {
                 } else {
                     // This is just to set the model straight aftet possible tumbling in the air.
                     this.doTumbling(true);
+                    if(!this.player.tumblingEndTL) {
+                        this.player.tumblingEndTL = new TimelineMax().to(bodyPos, 0.2, {
+                            z: 0,
+                            onComplete: () => {
+                                console.log('DONE');
+                                this.player.tumblingEndTL = null;
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -275,6 +286,15 @@ class Player {
         this.player.mesh.children[0].position.x = newDir === 0 ? 0.25 : -0.25; // FOR ROTATING THE DIRECTION INDICATOR
         this.player.yDir = newDir;
         this.player.yDirPhase = newDir; // TODO, change to animating, when model and anim exists
+    }
+
+    updateFn = () => {
+        if(this.isPlayerGrounded()) {
+            const bodyVelo = this.player.body.velocity,
+                bodyAVelo = this.player.body.angularVelocity;
+            if(Math.abs(bodyVelo.y) < 0.1) bodyVelo.y = 0;
+            if(Math.abs(bodyAVelo.z) < 0.2) bodyAVelo.z = 0;
+        }
     }
 }
 
