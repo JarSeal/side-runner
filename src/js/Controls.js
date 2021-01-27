@@ -26,6 +26,7 @@ class Controls {
                 this.keysDown.right = true;
                 break;
             case 'ShiftLeft':
+                if(!this.keysDown.shiftLeft) playerClass.actionStopSpin();
                 this.keysDown.shiftLeft = true;
                 break;
             }

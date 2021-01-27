@@ -45,7 +45,7 @@ class Level {
 
         // Add another level
         const g3Size = [2, 0.2, 2];
-        const g3Pos = [15, 1.5, 0];
+        const g3Pos = [15, 1.65, 0];
         const ground3Geo = new THREE.BoxBufferGeometry(g3Size[0], g3Size[1], g3Size[2]);
         const ground3Mat = new THREE.MeshLambertMaterial({ color: 0x666666 });
         const ground3Mesh = new THREE.Mesh(ground3Geo, ground3Mat);
@@ -79,6 +79,8 @@ class Level {
             player.body.force.setZero();
             player.body.torque.setZero();
             player.body.position = new CANNON.Vec3(startPos[0], startPos[1], startPos[2]);
+            if(player.zIroning) clearInterval(player.zIroning);
+            player.zIroning = false;
         }
     }
 }
