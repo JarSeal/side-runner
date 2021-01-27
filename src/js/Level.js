@@ -81,6 +81,7 @@ class Level {
             player.body.position = new CANNON.Vec3(startPos[0], startPos[1], startPos[2]);
             if(player.zIroning) clearInterval(player.zIroning);
             player.zIroning = false;
+            player.tumbling = false;
             this.sceneState.playerClass.doTumbling(true);
         }
     }

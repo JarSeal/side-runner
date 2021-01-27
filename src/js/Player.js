@@ -22,14 +22,19 @@ class Player {
             yDir: 0,
             yDirPhase: 0,
             zDir: 0,
-            zDirPhase: 0
+            zDirPhase: 0,
+            tumbling: false,
+            fullSizeMesh: [0.5, 1, 0.5],
+            smallSizeMesh: [0.5, 0.5, 0.5],
+            fullSizeBody: [0.25, 0.5, 0.25],
+            smallSizeBody: [0.25, 0.25, 0.25]
         };
         this.createPlayer(level);
     }
 
     createPlayer(level) {
         // Add a box
-        const bSize = [1, 1, 1];
+        const bSize = this.player.fullSizeMesh;
         const bPos = level.getStartPosition();
         const boxGeo = new THREE.BoxBufferGeometry(bSize[0], bSize[1], bSize[2]);
         const boxMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
@@ -39,7 +44,7 @@ class Player {
         const dirMesh = new THREE.Mesh(boxGeo, boxMat.clone());
         dirMesh.scale.set(0.1, 0.1, 0.1);
         dirMesh.material.color = new THREE.Color(0xf98800);
-        dirMesh.position.set(0.5, 0.5, 0);
+        dirMesh.position.set(0.25, 0.5, 0);
         boxMesh.add(dirMesh);
 
         const boxMaterial = new CANNON.Material();
@@ -57,7 +62,7 @@ class Player {
         this.sceneState.physics.addShape(boxMesh, boxBody, true, 0xFF0000);
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
-        this.player.mesh.scale.x = 0.5;
+        // this.player.mesh.scale.x = 0.5;
         this.setupCollisionEvent(boxBody);
     }
 
@@ -246,18 +251,28 @@ class Player {
     }
 
     doTumbling(stopTumbling) {
+        if(!stopTumbling && this.player.tumbling) return;
+        if(stopTumbling && !this.player.tumbling) return;
         if(stopTumbling) {
             // TEMP TRANSFORMATION, replace with tumbling when model is imported
-            this.player.mesh.scale.y = 1;
+            this.player.mesh.scale.y = this.player.fullSizeMesh[1];
+            this.player.body.shapes[0].halfExtents.y = this.player.fullSizeBody[1];
+            this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+            this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
+            this.player.tumbling = false;
         } else {
             // TEMP TRANSFORMATION, replace with tumbling when model is imported
-            this.player.mesh.scale.y = 0.5;
+            this.player.mesh.scale.y = this.player.smallSizeMesh[1];
+            this.player.body.shapes[0].halfExtents.y = this.player.smallSizeBody[1];
+            this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+            this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
+            this.player.tumbling = true;
         }
     }
 
     changeDirection(newDir) {
         if(this.player.yDir === newDir) return;
-        this.player.mesh.children[0].position.x = newDir === 0 ? 0.5 : -0.5; // FOR ROTATING THE DIRECTION INDICATOR
+        this.player.mesh.children[0].position.x = newDir === 0 ? 0.25 : -0.25; // FOR ROTATING THE DIRECTION INDICATOR
         this.player.yDir = newDir;
         this.player.yDirPhase = newDir; // TODO, change to animating, when model and anim exists
     }
