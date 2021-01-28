@@ -182,7 +182,7 @@ class Player {
         this.player.moveButtonDown[dir+'Interval'] = setInterval(() => {
             const isGrounded = this.isPlayerGrounded(),
                 increaseTumbling = 0.5,
-                increaseVelo = 0.4,
+                increaseVelo = 0.5,
                 breakingForce = 0.1;
             if(!this.player.moveButtonDown[dir]) {
                 clearInterval(this.player.moveButtonDown[dir+'Interval']);
@@ -191,7 +191,7 @@ class Player {
             if(dir === 'left') {
                 if(!isGrounded) {
                     aVelo.z += increaseTumbling;
-                    velo.x -= increaseVelo;
+                    velo.x -= increaseVelo * 0.32;
                 } else {
                     if(this.sceneState.keysDown.shiftLeft) {
                         velo.x += breakingForce;
@@ -204,7 +204,7 @@ class Player {
             } else if(dir === 'right') {
                 if(!isGrounded) {
                     aVelo.z -= increaseTumbling;
-                    velo.x += increaseVelo;
+                    velo.x += increaseVelo * 0.32;
                 } else {
                     if(this.sceneState.keysDown.shiftLeft) {
                         velo.x -= breakingForce;
