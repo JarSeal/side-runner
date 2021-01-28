@@ -1,5 +1,10 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { SMAAPass } from 'three/examples//jsm/postprocessing/SMAAPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module.js';
 import * as Stats from './vendor/stats.min.js';
@@ -25,11 +30,12 @@ class Root {
 
         // Setup scene and basic lights [START]
         const scene = new THREE.Scene();
-        const hemi = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.65);
-        hemi.position.set(32, -32, 5);
+        const hemi = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        hemi.position.set(32, 32, 5);
         scene.add(hemi);
         scene.add(new THREE.AmbientLight(0xffffff, 0.25));
-        scene.add(new THREE.AxesHelper(10)); // Helper
+        // scene.add(new THREE.AxesHelper(10)); // Helper
+        this.sceneState.scene = scene;
         this.scene = scene;
         // Setup scene and basic lights [/END]
 
@@ -59,6 +65,29 @@ class Root {
         this.world = world;
         this.helper = new CannonHelper(scene, world);
         // Setup physics (cannon.js) [/END]
+
+        // Setup postprocessing [START]
+        this.sceneState.postProcess = {};
+        this.composer = new EffectComposer(renderer);
+        this.composer.addPass(new RenderPass(scene, camera));
+        this.sceneState.postProcess.saoPass = new SAOPass(scene, camera, false, true);
+        this.sceneState.postProcess.saoPass.params.saoBias = 0.73;
+        this.sceneState.postProcess.saoPass.params.saoIntensity = 0.04;
+        this.sceneState.postProcess.saoPass.params.saoScale = 2.3;
+        this.sceneState.postProcess.saoPass.params.saoKernelRadius = 22;
+        this.composer.addPass(this.sceneState.postProcess.saoPass);
+        this.sceneState.postProcess.unrealBloom = new UnrealBloomPass(
+            new THREE.Vector2(
+                this.getScreenResolution().x,
+                this.getScreenResolution().y
+            ), 0.3, 0.008, 0.3);
+        this.composer.addPass(this.sceneState.postProcess.unrealBloom);
+        this.sceneState.postProcess.smaa = new SMAAPass(
+            window.innerWidth * (window.devicePixelRatio || 1),
+            window.innerHeight * (window.devicePixelRatio || 1)
+        );
+        this.composer.addPass(this.sceneState.postProcess.smaa);
+        // Setup postprocessing [/END]
 
         // Setup debug statisctics [START]
         const createStats = () => {
@@ -93,6 +122,25 @@ class Root {
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
             document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
         });
+        const unrealParams = {
+            exposure: 1,
+            bloomStrength: 0.3,
+            bloomThreshold: 0.3,
+            bloomRadius: 0.008
+        };
+        gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
+        gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
+        gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
+        gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
         this.sceneState.gui = gui;
         // GUI setup [/END]
 
@@ -128,7 +176,8 @@ class Root {
         this.updateCamera(player);
         this.sceneState.uiClass.renderLoop(this.sceneState);
         this.sceneState.levelClass.isPlayerDead(player);
-        this.renderer.render(this.scene, this.camera);
+        this.composer.render();
+        // this.renderer.render(this.scene, this.camera);
         if(this.sceneState.settings.showStats) this.stats.update(); // Debug statistics
     }
 
@@ -137,7 +186,7 @@ class Root {
         this.camera.position.set(
             player.body.position.x + 1,
             player.body.position.y + 1,
-            player.body.position.z + 10
+            player.body.position.z + 15
         );
         this.camera.lookAt(new THREE.Vector3(
             player.body.position.x,
@@ -154,12 +203,12 @@ class Root {
         this.world.step(this.sceneState.physics.timeStep, delta, this.sceneState.physics.maxSubSteps);
         for(i=0; i<l; i++) {
             shape = s[i];
-            shape.body.position.z = 0;
+            shape.body.position.z = shape.mesh.position.z;
             shape.body.quaternion.x = 0;
             shape.body.quaternion.y = 0;
             shape.mesh.position.copy(shape.body.position);
             shape.mesh.quaternion.copy(shape.body.quaternion);
-            if(shape.updateFn) shape.updateFn();
+            if(shape.updateFn) shape.updateFn(shape);
         }
         if(settings.showPhysicsHelpers) this.helper.update();
     }
@@ -171,10 +220,19 @@ class Root {
         if(!this.sceneState.settings.showPhysicsHelpers) this.scene.add(mesh);
         this.world.addBody(body);
         if(moving) {
-            this.sceneState.physics.shapes.push({ mesh, body, updateFn });
+            this.sceneState.physics.shapes.push({
+                id: 'phyShape-' + performance.now(),
+                mesh,
+                body,
+                updateFn
+            });
         }
         this.sceneState.physics.shapesLength = this.sceneState.physics.shapes.length;
-        if(this.sceneState.settings.showPhysicsHelpers) this.helper.addVisual(body, helperColor || 0xFFFFFF);
+        if(this.sceneState.settings.showPhysicsHelpers) {
+            let color = helperColor;
+            if(!color) moving ? color = 0xFF0000 : color = 0xFFFFFFF;
+            this.helper.addVisual(body, color);
+        }
     }
 
     resize(sceneState, renderer) {

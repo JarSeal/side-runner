@@ -40,13 +40,13 @@ class Player {
         const bSize = this.player.fullSizeMesh;
         const bPos = level.getStartPosition();
         const boxGeo = new THREE.BoxBufferGeometry(bSize[0], bSize[1], bSize[2]);
-        const boxMat = new THREE.MeshLambertMaterial({ color: 0x999999 });
+        const boxMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
         const boxMesh = new THREE.Mesh(boxGeo, boxMat);
         boxMesh.position.set(bPos[0], bPos[1], bPos[2]);
 
         const dirMesh = new THREE.Mesh(boxGeo, boxMat.clone());
         dirMesh.scale.set(0.1, 0.1, 0.1);
-        dirMesh.material.color = new THREE.Color(0xf98800);
+        dirMesh.material.color = new THREE.Color(0xffffff);
         dirMesh.position.set(0.25, 0.5, 0);
         boxMesh.add(dirMesh);
 
@@ -64,7 +64,7 @@ class Player {
 
         this.player.mesh = boxMesh;
         this.player.body = boxBody;
-        this.sceneState.physics.addShape(this.player, true, 0xFF0000);
+        this.sceneState.physics.addShape(this.player, true);
         this.setupCollisionEvent(boxBody);
     }
 
@@ -183,7 +183,7 @@ class Player {
             const isGrounded = this.isPlayerGrounded(),
                 increaseTumbling = 0.5,
                 increaseVelo = 0.5,
-                breakingForce = 0.1;
+                breakingForce = 0.2;
             if(!this.player.moveButtonDown[dir]) {
                 clearInterval(this.player.moveButtonDown[dir+'Interval']);
                 return;

@@ -56,8 +56,61 @@ class Level {
             shape: new CANNON.Box(new CANNON.Vec3(g3Size[0] / 2, g3Size[1] / 2, g3Size[2] / 2)),
             material: groundMaterial
         });
-        this.sceneState.physics.addShape({ mesh: ground3Mesh, body: ground3Body }, false, 0xff0000, true);
+        this.sceneState.physics.addShape({ mesh: ground3Mesh, body: ground3Body }, false);
 
+        this.createRandomBoxes();
+    }
+
+    createRandomBoxes() {
+        const amount = 100;
+        let created = 0;
+        const createBox = (xVelo, aVelo, color) => {
+            const bSize = [0.5, 0.5, 0.5];
+            const bPos = [10, 12, this.randomIntFromInterval(-12, 12) / 100];
+            const boxGeo = new THREE.BoxBufferGeometry(bSize[0], bSize[1], bSize[2]);
+            const boxMat = new THREE.MeshLambertMaterial({ color: color || 0xffffff });
+            const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+            boxMesh.position.set(bPos[0], bPos[1], bPos[2]);
+            const boxBody = new CANNON.Body({
+                mass: 10,
+                position: new CANNON.Vec3(bPos[0], bPos[1], bPos[2]),
+                shape: new CANNON.Box(new CANNON.Vec3(bSize[0] / 2, bSize[1] / 2, bSize[2] / 2)),
+                material: new CANNON.Material({ friction: 0.3 })
+            });
+            boxBody.velocity.x = xVelo;
+            boxBody.angularVelocity.z = aVelo;
+            boxBody.allowSleep = true;
+            boxBody.sleepSpeedLimit = 0.1;
+            boxBody.sleepTimeLimit = 1;
+            const updateFn = (shape) => {
+                if(shape.body.position.y < -20) {
+                    console.log('kill box..');
+                    shape.mesh.geometry.dispose();
+                    shape.mesh.material.dispose();
+                    this.sceneState.scene.remove(shape.mesh);
+                    this.sceneState.physics.world.remove(shape.body);
+                    const id = shape.id;
+                    this.sceneState.physics.shapes = this.sceneState.physics.shapes.filter(shape => id !== shape.id);
+                    this.sceneState.physics.shapesLength--;
+                }
+            };
+            this.sceneState.physics.addShape({ mesh: boxMesh, body: boxBody, updateFn }, true);
+        };
+        const interval = setInterval(() => {
+            let xVelo = this.randomIntFromInterval(0, 2);
+            if(Math.random > 0.5) xVelo *= -1;
+            let aVelo = this.randomIntFromInterval(0, 5);
+            if(Math.random > 0.5) aVelo *= -1;
+            const colors = [0xffffff, 0x333333, 0x777777, 0xcccccc, 0x999999];
+            const color = colors[this.randomIntFromInterval(0, 4)];
+            createBox(xVelo, aVelo, color);
+            created++;
+            if(created === amount) clearInterval(interval);
+        }, 500);
+    }
+
+    randomIntFromInterval(min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
     getStartPosition() {
