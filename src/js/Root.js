@@ -89,6 +89,7 @@ class Root {
             window.innerHeight * (window.devicePixelRatio || 1)
         );
         this.composer.addPass(this.sceneState.postProcess.smaa);
+        this.sceneState.postProcess.composer = this.composer;
         // Setup postprocessing [/END]
 
         // Setup debug statisctics [START]
@@ -111,6 +112,9 @@ class Root {
             showStats: true,
             showVeloMeters: true,
             lockCamera: true,
+            useSao: true,
+            useBloom: true,
+            useSmaa: true
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
         this.initResizer();
@@ -151,7 +155,7 @@ class Root {
         const delta = this.sceneState.clock.getDelta();
         const player = this.sceneState.player;
         this.updatePhysics(delta);
-        this.updateCamera(player);
+        this.updateCameraAndPostProcessing(player);
         this.sceneState.uiClass.renderLoop(this.sceneState);
         this.sceneState.levelClass.isPlayerDead(player);
         this.composer.render();
@@ -159,7 +163,11 @@ class Root {
         if(this.sceneState.settings.showStats) this.stats.update(); // Debug statistics
     }
 
-    updateCamera(player) {
+    updateCameraAndPostProcessing(player) {
+        // Post processing
+        
+
+        // Camera
         if(!this.sceneState.settings.lockCamera) return;
         this.camera.position.set(
             player.body.position.x + 1,
@@ -223,6 +231,7 @@ class Root {
         sceneState.camera.updateProjectionMatrix();
         renderer.setSize(width, height);
         renderer.setPixelRatio(pixelRatio);
+        this.resizePostProcessors(width, height, pixelRatio);
     }
 
     initResizer() {
@@ -245,6 +254,24 @@ class Root {
         });
     }
 
+    resizePostProcessors(width, height, pixelRatio) {
+        if(this.sceneState.postProcess.unrealBloom) {
+            this.sceneState.postProcess.unrealBloom.resolution = new THREE.Vector2(width, height);
+            this.sceneState.postProcess.unrealBloom.setSize(
+                width,
+                height
+            );
+        }
+        if(this.sceneState.postProcess.smaa) {
+            this.sceneState.postProcess.smaa.setSize(
+                width * pixelRatio,
+                height * pixelRatio
+            );
+        }
+        this.sceneState.postProcess.composer.setSize(width, height);
+        this.sceneState.postProcess.composer.setPixelRatio(pixelRatio);
+    }
+
     getScreenResolution() {
         return {
             x: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
@@ -259,6 +286,16 @@ class Root {
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
             document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
         });
+        gui.add(this.sceneState.settings, 'useSmaa').name('Post: use SMAA').onChange((value) => {
+            this.sceneState.postProcess.smaa.enabled = value;
+        });
+        gui.add(this.sceneState.settings, 'useSao').name('Post: use AO').onChange((value) => {
+            this.sceneState.postProcess.saoPass.enabled = value;
+        });
+        gui.add(this.sceneState.settings, 'useBloom').name('Post: use Bloom').onChange((value) => {
+            this.sceneState.postProcess.unrealBloom.enabled = value;
+        });
+
         const unrealParams = {
             exposure: 1.2,
             bloomStrength: 0.3,
