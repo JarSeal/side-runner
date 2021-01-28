@@ -11,7 +11,7 @@ class Player {
             updateFn: this.updateFn,
             causeDamageVeloLimit1: 10,
             causeDamageVeloLimit2: 14,
-            maxSpeed: 5,
+            maxSpeed: 7,
             maxTumblingSpeed: 15,
             maxJumpStrength: 8,
             maxJumpTarget: 300, // ms
@@ -26,6 +26,7 @@ class Player {
             zDir: 0,
             zDirPhase: 0,
             tumbling: false,
+            angledTilt: 0,
             landingOnFeetTL: null,
             fullSizeMesh: [0.5, 1, 0.5],
             smallSizeMesh: [0.5, 0.5, 0.5],
@@ -70,9 +71,11 @@ class Player {
 
     isPlayerGrounded() {
         let curY = parseFloat(this.player.body.position.y.toFixed(5));
+        // console.log('isPlayherGrounded:');
         return performance.now() - this.player.lastCollisionTime < 50 ||
             (this.player.lastCollisionHeight > curY - 0.1 &&
-            this.player.lastCollisionHeight < curY + 0.1);
+            this.player.lastCollisionHeight < curY + 0.1) ||
+            (this.player.angledTilt !== 0);
     }
 
     setupCollisionEvent(body) {
@@ -83,12 +86,19 @@ class Player {
             const yVelo = this.player.body.velocity.y;
             const xVelo = this.player.body.velocity.x;
             const aVelo = this.player.body.velocity.z;
+            let planeAngle = 0;
             // contact.bi and contact.bj are the colliding bodies, and contact.ni is the collision normal.
             // We do not yet know which one is which! Let's check.
             if(contact.bi.id == body.id) { // bi is the player body, flip the contact normal
                 contact.ni.negate(contactNormal);
+                if(contact.bj.isNotLeveled) {
+                    planeAngle = contact.bj.eulerAngleZ;
+                }
             } else {
                 contactNormal.copy(contact.ni); // bi is something else. Keep the normal as it is
+                if(contact.bi.isNotLeveled) {
+                    planeAngle = contact.bi.eulerAngleZ;
+                }
             }
             // If contactNormal.dot(upAxis) is between 0 and 1, we know that the contact normal is somewhat in the up direction.
             if(contactNormal.dot(upAxis) > 0.5) { // Use a "good" threshold value between 0 and 1 here!
@@ -96,8 +106,9 @@ class Player {
                     console.log('TAKE DAMAGE!', yVelo);
                 }
                 this.player.lastCollisionTime = performance.now();
-                this.player.lastCollisionHeight = parseFloat(body.position.y).toFixed(5);
+                this.player.lastCollisionHeight = parseFloat(body.position.y.toFixed(5));
                 const bodyPos = this.player.body.quaternion;
+                this.setAngledTilt(planeAngle);
                 if(bodyPos.z < -0.3 || bodyPos.z > 0.3) {
                     if(Math.abs(xVelo) > this.player.causeDamageVeloLimit1 || Math.abs(yVelo) > this.player.causeDamageVeloLimit1) {
                         console.log('TAKE DAMAGE!', yVelo);
@@ -129,7 +140,7 @@ class Player {
                 } else {
                     // This is just to set the model straight aftet possible tumbling in the air.
                     this.doTumbling(true);
-                    if(!this.player.landingOnFeetTL) {
+                    if(!this.player.angledTilt && !this.player.landingOnFeetTL) {
                         this.player.landingOnFeetTL = new TimelineMax().to(bodyPos, 0.2, {
                             z: 0,
                             onComplete: () => {
@@ -161,7 +172,7 @@ class Player {
         if(this.isPlayerGrounded()) {
             const maxTarget = this.player.maxJumpTarget;
             let time = performance.now() - startTime;
-            if(time > maxTarget && time < maxTarget + 100) {
+            if(time > maxTarget && time < maxTarget + 200) {
                 time = maxTarget;
             } else if(time > maxTarget) {
                 time = maxTarget - (time - maxTarget);
@@ -170,6 +181,9 @@ class Player {
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
         }
+        setTimeout(() => {
+            this.setAngledTilt(0);
+        }, 120);
     }
 
     actionMove = (dir) => {
@@ -268,8 +282,9 @@ class Player {
     }
 
     doTumbling(stopTumbling) {
-        if(!stopTumbling && this.player.tumbling) return;
-        if(stopTumbling && !this.player.tumbling) return;
+        if((!stopTumbling && this.player.tumbling) ||
+            (stopTumbling && !this.player.tumbling) ||
+            this.player.angledTilt) return;
         if(stopTumbling) {
             // TEMP TRANSFORMATION, replace with tumbling when model is imported
             this.player.mesh.scale.y = this.player.fullSizeMesh[1];
@@ -285,6 +300,38 @@ class Player {
             this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
             this.player.tumbling = true;
         }
+    }
+
+    setAngledTilt(angle) {
+        if(this.player.angledTilt === angle) return;
+        if(this.player.angledTiltInterval) clearInterval(this.player.angledTiltInterval);
+        if(angle) {
+            // TEMP TRANSFORMATION, replace with tumbling when model is imported
+            this.player.mesh.scale.x = 2;
+            this.player.mesh.scale.y = 0.75;
+            this.player.body.shapes[0].halfExtents.x = this.player.fullSizeBody[0] * 2;
+            this.player.body.shapes[0].halfExtents.y = this.player.fullSizeBody[1] * 0.75;
+            this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+            this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
+            this.player.angledTiltInterval = setInterval(() => {
+                const bodyVelo = this.player.body.velocity;
+                const threshold = this.player.maxSpeed;
+                if(bodyVelo.x > threshold || bodyVelo.y > threshold) {
+                    this.setAngledTilt(0);
+                }
+            }, 70);
+        } else {
+            // TEMP TRANSFORMATION, replace with tumbling when model is imported
+            this.player.mesh.scale.y = 1;
+            this.player.mesh.scale.x = 1;
+            this.player.body.shapes[0].halfExtents.x = this.player.fullSizeBody[0];
+            this.player.body.shapes[0].halfExtents.y = this.player.fullSizeBody[1];
+            this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+            this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
+            this.player.angledTiltInterval = null;
+        }
+        this.player.angledTilt = angle;
+        this.player.body.quaternion.setFromEuler(0, 0, angle, 'XYZ');
     }
 
     changeDirection(newDir) {

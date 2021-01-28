@@ -15,6 +15,31 @@ class Level {
         this.createBoxPlane([20, 0.2, 2], [46.2, 8.82, 0]);
 
         this.createRandomBoxes();
+        // this.createTestBox([1, 1, 1], [4, 4, 0], 0, 0xff0000);
+    }
+
+    createTestBox(size, pos, rotation, color) {
+        const boxPlaneGeo = new THREE.BoxBufferGeometry(size[0], size[1], size[2]);
+        const boxPlaneMat = new THREE.MeshLambertMaterial({ color: color || 0x666666 });
+        const boxPlaneMesh = new THREE.Mesh(boxPlaneGeo, boxPlaneMat);
+        boxPlaneMesh.position.set(pos[0], pos[1], pos[2]);
+        boxPlaneMesh.rotation.z = rotation;
+        const boxPlaneBody = new CANNON.Body({
+            mass: 2,
+            position: new CANNON.Vec3(pos[0], pos[1], pos[2]),
+            shape: new CANNON.Box(new CANNON.Vec3(size[0] / 2, size[1] / 2, size[2] / 2)),
+            material: new CANNON.Material({
+                friction: size.length > 3 ? size[4] : 0.3
+            })
+        });
+        boxPlaneBody.addShape(new CANNON.Box(new CANNON.Vec3(size[0], size[1] / 4, size[2]))); // Additional shape
+        boxPlaneBody.quaternion.setFromEuler(0, 0, rotation, 'XYZ');
+        boxPlaneBody.allowSleep = true;
+        boxPlaneBody.sleepSpeedLimit = 0.1;
+        boxPlaneBody.sleepTimeLimit = 1;
+        boxPlaneBody.weird = 'weird';
+        console.log('New shape', boxPlaneBody);
+        this.sceneState.physics.addShape({ mesh: boxPlaneMesh, body: boxPlaneBody }, true);
     }
 
     createBoxPlane(size, pos, rotation, color, addToGui) {
@@ -37,6 +62,10 @@ class Level {
         boxPlaneBody.allowSleep = true;
         boxPlaneBody.sleepSpeedLimit = 0.1;
         boxPlaneBody.sleepTimeLimit = 1;
+        if(rotation) {
+            boxPlaneBody.isNotLeveled = true;
+            boxPlaneBody.eulerAngleZ = rotation;
+        }
         this.sceneState.physics.addShape({ mesh: boxPlaneMesh, body: boxPlaneBody }, false);
         if(addToGui) {
             this.sceneState.gui.add(boxPlaneBody.position, 'x', -250, 250).name('Pos X:').step(0.1).onChange(() => {
