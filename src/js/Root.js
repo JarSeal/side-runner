@@ -56,12 +56,12 @@ class Root {
         world.allowSleep = true;
         world.gravity.set(0, -9.82, 0);
         world.broadphase = new CANNON.NaiveBroadphase();
-        world.iterations = 10;
-        world.solver.iterations = 10;
+        world.iterations = 50;
+        world.solver.iterations = 50;
         this.sceneState.physics = {};
         this.sceneState.physics.world = world;
         this.sceneState.physics.timeStep = 1 / 60;
-        this.sceneState.physics.maxSubSteps = 3;
+        this.sceneState.physics.maxSubSteps = 5;
         this.sceneState.physics.addShape = this.addShapeToPhysics;
         this.sceneState.physics.shapes = [];
         this.world = world;
@@ -221,7 +221,7 @@ class Root {
         }
     }
 
-    resize(sceneState, renderer) {
+    resize = (sceneState, renderer) => {
         const width = sceneState.getScreenResolution().x;
         const height = sceneState.getScreenResolution().y;
         const pixelRatio = window.devicePixelRatio || 1;
@@ -296,25 +296,25 @@ class Root {
             this.sceneState.postProcess.unrealBloom.enabled = value;
         });
 
-        const unrealParams = {
-            exposure: 1.2,
-            bloomStrength: 0.3,
-            bloomThreshold: 0.3,
-            bloomRadius: 0.008
-        };
-        gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
-        gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
-        gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
-        gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
-        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
+        // const unrealParams = {
+        //     exposure: 1.2,
+        //     bloomStrength: 0.3,
+        //     bloomThreshold: 0.3,
+        //     bloomRadius: 0.008
+        // };
+        // gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
+        // gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
+        // gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
+        // gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
+        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
     }
 }
 

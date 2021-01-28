@@ -73,6 +73,9 @@ class UI {
                 <div class="veloMeters__xVelo">
                     A: <span id="aVelo"></span>
                 </div>
+                <div class="veloMeters__grounded">
+                    is grounded: <span id="isGrounded"></span>
+                </div>
             </div>
         `;
         this.anims.veloMeters = {
@@ -81,10 +84,12 @@ class UI {
             xVeloElem: null,
             yVeloElem: null,
             aVeloElem: null,
+            groundedElem: null,
             updateFn: (sceneState) => {
                 this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x.toFixed(2);
                 this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y.toFixed(2);
                 this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z.toFixed(2);
+                this.anims.veloMeters.groundedElem.innerHTML = sceneState.playerClass.isPlayerGrounded();
             },
             removeFn: () => {
                 const elem = document.getElementById('veloMeters');
@@ -95,6 +100,7 @@ class UI {
                 this.anims.veloMeters.xVeloElem = document.getElementById('xVelo');
                 this.anims.veloMeters.yVeloElem = document.getElementById('yVelo');
                 this.anims.veloMeters.aVeloElem = document.getElementById('aVelo');
+                this.anims.veloMeters.groundedElem = document.getElementById('isGrounded');
             },
             checkSettingsFn: (sceneState) => {
                 if(this.anims.veloMeters.run !== sceneState.settings.showVeloMeters) {

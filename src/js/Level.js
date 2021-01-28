@@ -8,61 +8,56 @@ class Level {
     }
 
     createLevel() {
-        // Basic ground material
-        const groundMaterial = new CANNON.Material({
-            friction: 0.3
-        });
-
-        // Add ground
-        const gSize = [20, 0.2, 2];
-        const gPos = [8, 0, 0];
-        const groundGeo = new THREE.BoxBufferGeometry(gSize[0], gSize[1], gSize[2]);
-        const groundMat = new THREE.MeshLambertMaterial({ color: 0x666666 });
-        const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-        groundMesh.position.set(gPos[0], gPos[1], gPos[2]);
-        const groundBody = new CANNON.Body({
-            mass: 0,
-            position: new CANNON.Vec3(gPos[0], gPos[1], gPos[2]),
-            shape: new CANNON.Box(new CANNON.Vec3(gSize[0] / 2, gSize[1] / 2, gSize[2] / 2)),
-            material: groundMaterial
-        });
-        this.sceneState.physics.addShape({ mesh: groundMesh, body: groundBody }, false);
-
-        // Add upper level
-        const g2Size = [5, 0.2, 2];
-        const g2Pos = [10, 3, 0];
-        const ground2Geo = new THREE.BoxBufferGeometry(g2Size[0], g2Size[1], g2Size[2]);
-        const ground2Mat = new THREE.MeshLambertMaterial({ color: 0x666666 });
-        const ground2Mesh = new THREE.Mesh(ground2Geo, ground2Mat);
-        ground2Mesh.position.set(g2Pos[0], g2Pos[1], g2Pos[2]);
-        const ground2Body = new CANNON.Body({
-            mass: 0,
-            position: new CANNON.Vec3(g2Pos[0], g2Pos[1], g2Pos[2]),
-            shape: new CANNON.Box(new CANNON.Vec3(g2Size[0] / 2, g2Size[1] / 2, g2Size[2] / 2)),
-            material: groundMaterial
-        });
-        this.sceneState.physics.addShape({ mesh: ground2Mesh, body: ground2Body }, false);
-
-        // Add another level
-        const g3Size = [2, 0.2, 2];
-        const g3Pos = [15, 1.65, 0];
-        const ground3Geo = new THREE.BoxBufferGeometry(g3Size[0], g3Size[1], g3Size[2]);
-        const ground3Mat = new THREE.MeshLambertMaterial({ color: 0x666666 });
-        const ground3Mesh = new THREE.Mesh(ground3Geo, ground3Mat);
-        ground3Mesh.position.set(g3Pos[0], g3Pos[1], g3Pos[2]);
-        const ground3Body = new CANNON.Body({
-            mass: 0,
-            position: new CANNON.Vec3(g3Pos[0], g3Pos[1], g3Pos[2]),
-            shape: new CANNON.Box(new CANNON.Vec3(g3Size[0] / 2, g3Size[1] / 2, g3Size[2] / 2)),
-            material: groundMaterial
-        });
-        this.sceneState.physics.addShape({ mesh: ground3Mesh, body: ground3Body }, false);
+        this.createBoxPlane([20, 0.2, 2], [8, 0, 0]);
+        this.createBoxPlane([5, 0.2, 2], [10, 3, 0]);
+        this.createBoxPlane([2, 0.2, 2], [15, 1.65, 0]);
+        this.createBoxPlane([20, 0.2, 2, 0.1], [27, 5, 0], Math.PI / 8); // Hill
+        this.createBoxPlane([20, 0.2, 2], [46.2, 8.82, 0]);
 
         this.createRandomBoxes();
     }
 
+    createBoxPlane(size, pos, rotation, color, addToGui) {
+        if(!rotation) rotation = 0;
+        const groundMaterial = new CANNON.Material({
+            friction: size.length > 3 ? size[4] : 0.3
+        });
+        const boxPlaneGeo = new THREE.BoxBufferGeometry(size[0], size[1], size[2]);
+        const boxPlaneMat = new THREE.MeshLambertMaterial({ color: color || 0x666666 });
+        const boxPlaneMesh = new THREE.Mesh(boxPlaneGeo, boxPlaneMat);
+        boxPlaneMesh.position.set(pos[0], pos[1], pos[2]);
+        boxPlaneMesh.rotation.z = rotation;
+        const boxPlaneBody = new CANNON.Body({
+            mass: 0,
+            position: new CANNON.Vec3(pos[0], pos[1], pos[2]),
+            shape: new CANNON.Box(new CANNON.Vec3(size[0] / 2, size[1] / 2, size[2] / 2)),
+            material: groundMaterial
+        });
+        console.log(boxPlaneBody);
+        boxPlaneBody.quaternion.setFromEuler(0, 0, rotation, 'XYZ');
+        boxPlaneBody.allowSleep = true;
+        boxPlaneBody.sleepSpeedLimit = 0.1;
+        boxPlaneBody.sleepTimeLimit = 1;
+        this.sceneState.physics.addShape({ mesh: boxPlaneMesh, body: boxPlaneBody }, false);
+        if(addToGui) {
+            this.sceneState.gui.add(boxPlaneBody.position, 'x', -250, 250).name('Pos X:').step(0.1).onChange(() => {
+                boxPlaneMesh.position.copy(boxPlaneBody.position);
+            });
+            this.sceneState.gui.add(boxPlaneBody.position, 'y', -250, 250).name('Pos Y:').step(0.1).onChange(() => {
+                boxPlaneMesh.position.copy(boxPlaneBody.position);
+            });
+            this.sceneState.gui.add(boxPlaneBody.position, 'z', -250, 250).name('Pos Z:').step(0.1).onChange(() => {
+                boxPlaneMesh.position.copy(boxPlaneBody.position);
+            });
+            this.sceneState.gui.add(boxPlaneMesh.rotation, 'z', 0, Math.PI * 2).name('Angle:').step(0.001).onChange((value) => {
+                boxPlaneBody.quaternion.setFromEuler(0, 0, value, 'XYZ');
+                boxPlaneMesh.quaternion.copy(boxPlaneBody.quaternion);
+            });
+        }
+    }
+
     createRandomBoxes() {
-        const amount = 100;
+        const amount = 25;
         let created = 0;
         const createBox = (xVelo, aVelo, color) => {
             const bSize = [0.5, 0.5, 0.5];
