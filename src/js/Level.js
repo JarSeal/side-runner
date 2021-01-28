@@ -11,7 +11,7 @@ class Level {
         this.createBoxPlane([20, 0.2, 2], [8, 0, 0]);
         this.createBoxPlane([5, 0.2, 2], [10, 3, 0]);
         this.createBoxPlane([2, 0.2, 2], [15, 1.65, 0]);
-        this.createBoxPlane([20, 0.2, 2, 0.1], [27, 5, 0], Math.PI / 8); // Hill
+        this.createBoxPlane([20, 0.2, 2], [27, 5, 0], Math.PI / 8); // Hill
         this.createBoxPlane([20, 0.2, 2], [46.2, 8.82, 0]);
 
         this.createRandomBoxes();
