@@ -68,30 +68,6 @@ class Root {
         this.helper = new CannonHelper(scene, world);
         // Setup physics (cannon.js) [/END]
 
-        // Setup postprocessing [START]
-        this.sceneState.postProcess = {};
-        this.composer = new EffectComposer(renderer);
-        this.composer.addPass(new RenderPass(scene, camera));
-        this.sceneState.postProcess.saoPass = new SAOPass(scene, camera, false, true);
-        this.sceneState.postProcess.saoPass.params.saoBias = 0.73;
-        this.sceneState.postProcess.saoPass.params.saoIntensity = 0.04;
-        this.sceneState.postProcess.saoPass.params.saoScale = 2.3;
-        this.sceneState.postProcess.saoPass.params.saoKernelRadius = 22;
-        this.composer.addPass(this.sceneState.postProcess.saoPass);
-        this.sceneState.postProcess.unrealBloom = new UnrealBloomPass(
-            new THREE.Vector2(
-                this.getScreenResolution().x,
-                this.getScreenResolution().y
-            ), 0.3, 0.008, 0.3);
-        this.composer.addPass(this.sceneState.postProcess.unrealBloom);
-        this.sceneState.postProcess.smaa = new SMAAPass(
-            window.innerWidth * (window.devicePixelRatio || 1),
-            window.innerHeight * (window.devicePixelRatio || 1)
-        );
-        this.composer.addPass(this.sceneState.postProcess.smaa);
-        this.sceneState.postProcess.composer = this.composer;
-        // Setup postprocessing [/END]
-
         // Setup debug statisctics [START]
         const createStats = () => {
             const s = new Stats();
@@ -112,9 +88,9 @@ class Root {
             showStats: true,
             showVeloMeters: true,
             lockCamera: true,
-            useSao: true,
-            useBloom: true,
-            useSmaa: true
+            useSao: false,
+            useBloom: false,
+            useSmaa: false
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
         this.initResizer();
@@ -125,6 +101,33 @@ class Root {
         this.addGuiItems(gui);
         this.sceneState.gui = gui;
         // GUI setup [/END]
+
+        // Setup postprocessing [START]
+        this.sceneState.postProcess = {};
+        this.composer = new EffectComposer(renderer);
+        this.composer.addPass(new RenderPass(scene, camera));
+        this.sceneState.postProcess.saoPass = new SAOPass(scene, camera, false, true);
+        this.sceneState.postProcess.saoPass.enabled = this.sceneState.settings.useSao;
+        this.sceneState.postProcess.saoPass.params.saoBias = 0.73;
+        this.sceneState.postProcess.saoPass.params.saoIntensity = 0.04;
+        this.sceneState.postProcess.saoPass.params.saoScale = 2.3;
+        this.sceneState.postProcess.saoPass.params.saoKernelRadius = 22;
+        this.composer.addPass(this.sceneState.postProcess.saoPass);
+        this.sceneState.postProcess.unrealBloom = new UnrealBloomPass(
+            new THREE.Vector2(
+                this.getScreenResolution().x,
+                this.getScreenResolution().y
+            ), 0.3, 0.008, 0.3);
+        this.sceneState.postProcess.unrealBloom.enabled = this.sceneState.settings.useBloom;
+        this.composer.addPass(this.sceneState.postProcess.unrealBloom);
+        this.sceneState.postProcess.smaa = new SMAAPass(
+            window.innerWidth * (window.devicePixelRatio || 1),
+            window.innerHeight * (window.devicePixelRatio || 1)
+        );
+        this.sceneState.postProcess.smaa.enabled = this.sceneState.settings.useSmaa;
+        this.composer.addPass(this.sceneState.postProcess.smaa);
+        this.sceneState.postProcess.composer = this.composer;
+        // Setup postprocessing [/END]
 
         this.runApp(camera, this.sceneState);
     }
