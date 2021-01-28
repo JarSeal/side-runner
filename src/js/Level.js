@@ -33,7 +33,6 @@ class Level {
             shape: new CANNON.Box(new CANNON.Vec3(size[0] / 2, size[1] / 2, size[2] / 2)),
             material: groundMaterial
         });
-        console.log(boxPlaneBody);
         boxPlaneBody.quaternion.setFromEuler(0, 0, rotation, 'XYZ');
         boxPlaneBody.allowSleep = true;
         boxPlaneBody.sleepSpeedLimit = 0.1;
@@ -67,7 +66,7 @@ class Level {
             const boxMesh = new THREE.Mesh(boxGeo, boxMat);
             boxMesh.position.set(bPos[0], bPos[1], bPos[2]);
             const boxBody = new CANNON.Body({
-                mass: 10,
+                mass: 1,
                 position: new CANNON.Vec3(bPos[0], bPos[1], bPos[2]),
                 shape: new CANNON.Box(new CANNON.Vec3(bSize[0] / 2, bSize[1] / 2, bSize[2] / 2)),
                 material: new CANNON.Material({ friction: 0.3 })
