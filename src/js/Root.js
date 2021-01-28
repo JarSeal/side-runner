@@ -21,6 +21,8 @@ class Root {
         // Setup renderer [START]
         const renderer = new THREE.WebGLRenderer();
         renderer.setClearColor('#000000');
+        renderer.toneMapping = THREE.ReinhardToneMapping;
+        renderer.toneMappingExposure = Math.pow(1.2, 4.0);
         const screenSize = this.getScreenResolution();
         renderer.setSize(screenSize.x, screenSize.y);
         renderer.domElement.id = 'main-stage';
@@ -116,31 +118,7 @@ class Root {
 
         // GUI setup [START]
         const gui = new GUI();
-        gui.close();
-        gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
-        gui.add(this.sceneState.settings, 'showVeloMeters').name('Show velo meters');
-        gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
-            document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
-        });
-        const unrealParams = {
-            exposure: 1,
-            bloomStrength: 0.3,
-            bloomThreshold: 0.3,
-            bloomRadius: 0.008
-        };
-        gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
-        gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
-        gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
-        gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
+        this.addGuiItems(gui);
         this.sceneState.gui = gui;
         // GUI setup [/END]
 
@@ -272,6 +250,34 @@ class Root {
             x: Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0),
             y: Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
         };
+    }
+
+    addGuiItems(gui) {
+        gui.close();
+        gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
+        gui.add(this.sceneState.settings, 'showVeloMeters').name('Show velo meters');
+        gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
+            document.getElementById('debug-stats-wrapper').style.display = value ? 'block' : 'none';
+        });
+        const unrealParams = {
+            exposure: 1.2,
+            bloomStrength: 0.3,
+            bloomThreshold: 0.3,
+            bloomRadius: 0.008
+        };
+        gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
+        gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
+        gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
+        gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
     }
 }
 
