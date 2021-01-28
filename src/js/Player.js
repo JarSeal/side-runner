@@ -69,10 +69,10 @@ class Player {
     }
 
     isPlayerGrounded() {
-        let curY = parseFloat(this.player.body.position.y).toFixed(5);
+        let curY = parseFloat(this.player.body.position.y.toFixed(5));
         return performance.now() - this.player.lastCollisionTime < 50 ||
-            (parseFloat(this.player.lastCollisionHeight) > parseFloat(curY) - 0.1 &&
-            parseFloat(this.player.lastCollisionHeight) < parseFloat(curY) + 0.1);
+            (this.player.lastCollisionHeight > curY - 0.1 &&
+            this.player.lastCollisionHeight < curY + 0.1);
     }
 
     setupCollisionEvent(body) {
