@@ -11,7 +11,7 @@ class Level {
         this.createBoxPlane([20, 0.2, 2], [8, 0, 0]);
         this.createBoxPlane([5, 0.2, 2], [10, 3, 0]);
         this.createBoxPlane([2, 0.2, 2], [15, 1.65, 0]);
-        this.createBoxPlane([20, 0.2, 2], [27, 5, 0], Math.PI / 8); // Hill
+        this.createBoxPlane([20, 0.2, 2, 0.1], [27, 5, 0], Math.PI / 8); // Hill
         this.createBoxPlane([20, 0.2, 2], [46.2, 8.82, 0]);
 
         this.createRandomBoxes();
@@ -37,15 +37,13 @@ class Level {
         boxPlaneBody.allowSleep = true;
         boxPlaneBody.sleepSpeedLimit = 0.1;
         boxPlaneBody.sleepTimeLimit = 1;
-        boxPlaneBody.weird = 'weird';
-        console.log('New shape', boxPlaneBody);
         this.sceneState.physics.addShape({ mesh: boxPlaneMesh, body: boxPlaneBody }, true);
     }
 
     createBoxPlane(size, pos, rotation, color, addToGui) {
         if(!rotation) rotation = 0;
         const groundMaterial = new CANNON.Material({
-            friction: size.length > 3 ? size[4] : 0.3
+            friction: size[3] ? size[3] : 0.3
         });
         const boxPlaneGeo = new THREE.BoxBufferGeometry(size[0], size[1], size[2]);
         const boxPlaneMat = new THREE.MeshLambertMaterial({ color: color || 0x666666 });
