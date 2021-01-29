@@ -84,7 +84,6 @@ class Player {
         const upAxis = new CANNON.Vec3(0, 1, 0);
         body.addEventListener('collide', (e) => {
             const contact = e.contact;
-            console.log('colliding');
             const yVelo = this.player.body.velocity.y;
             const xVelo = this.player.body.velocity.x;
             const aVelo = this.player.body.velocity.z;
