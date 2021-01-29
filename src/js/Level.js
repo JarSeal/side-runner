@@ -108,7 +108,7 @@ class Level {
             createBox(xVelo, aVelo, color);
             created++;
             if(created === amount) clearInterval(interval);
-        }, 500);
+        }, 100);
     }
 
     randomIntFromInterval(min, max) {

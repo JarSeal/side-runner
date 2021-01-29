@@ -13,6 +13,7 @@ class Controls {
                 if(!this.keysDown.space) {
                     this.keysDown.space = performance.now();
                     this.sceneState.uiClass.updateJumpMeter(this.keysDown.space);
+                    playerClass.actionPrepareJump(this.keysDown.space);
                 }
                 break;
             case 'KeyA':

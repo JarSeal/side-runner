@@ -168,6 +168,12 @@ class Player {
     }
 
     actionJump = (startTime) => {
+        if(this.player.prepareJumpInterval) clearInterval(this.player.prepareJumpInterval);
+        this.player.mesh.scale.y = this.player.angledTilt ? 0.75 : 1;
+        const bodySize = this.player.angledTilt ? this.player.fullSizeBody[1] * 0.75 : this.player.fullSizeBody[1];
+        this.player.body.shapes[0].halfExtents.y = bodySize;
+        this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+        this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
         this.player.body.wakeUp();
         if(this.isPlayerGrounded()) {
             const maxTarget = this.player.maxJumpTarget;
@@ -181,9 +187,22 @@ class Player {
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
         }
-        setTimeout(() => {
-            this.setAngledTilt(0);
-        }, 120);
+    }
+
+    actionPrepareJump = (startTime) => {
+        const maxTarget = this.player.maxJumpTarget;
+        this.player.prepareJumpInterval = setInterval(() => {
+            const time = performance.now() - startTime,
+                percentage = time / maxTarget * 100,
+                bodySize = this.player.angledTilt ? this.player.fullSizeBody[1] * 0.75 : this.player.fullSizeBody[1];
+            let amount = percentage * 0.0005;
+            if(amount > 0.1) amount = 0.1;
+            this.player.mesh.scale.y -= amount;
+            if(this.player.mesh.scale.y < 0.8) this.player.mesh.scale.y = 0.8;
+            this.player.body.shapes[0].halfExtents.y = bodySize - amount;
+            this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
+            this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
+        }, 50);
     }
 
     actionMove = (dir) => {
