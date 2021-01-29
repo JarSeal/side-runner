@@ -32,7 +32,7 @@ class Root {
 
         // Setup scene and basic lights [START]
         const scene = new THREE.Scene();
-        const hemi = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        const hemi = new THREE.HemisphereLight(0xbe8338, 0xbcc29f, 1);
         hemi.position.set(32, 32, 5);
         scene.add(hemi);
         scene.add(new THREE.AmbientLight(0xffffff, 0.25));
@@ -88,47 +88,54 @@ class Root {
             showStats: true,
             showVeloMeters: true,
             lockCamera: true,
-            useSao: false,
-            useBloom: false,
-            useSmaa: false
+            useSao: true,
+            useBloom: true,
+            useSmaa: true
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
         this.sceneState.isGroundMeshes = [];
         this.initResizer();
         // Other setup [/END]
 
-        // GUI setup [START]
-        const gui = new GUI();
-        this.addGuiItems(gui);
-        this.sceneState.gui = gui;
-        // GUI setup [/END]
-
         // Setup postprocessing [START]
         this.sceneState.postProcess = {};
         this.composer = new EffectComposer(renderer);
         this.composer.addPass(new RenderPass(scene, camera));
+
         this.sceneState.postProcess.saoPass = new SAOPass(scene, camera, false, true);
         this.sceneState.postProcess.saoPass.enabled = this.sceneState.settings.useSao;
         this.sceneState.postProcess.saoPass.params.saoBias = 0.73;
-        this.sceneState.postProcess.saoPass.params.saoIntensity = 0.04;
+        this.sceneState.postProcess.saoPass.params.saoIntensity = 0.03;
         this.sceneState.postProcess.saoPass.params.saoScale = 2.3;
         this.sceneState.postProcess.saoPass.params.saoKernelRadius = 22;
+        this.sceneState.postProcess.saoPass.params.saoBlurRadius = 53.8;
+        this.sceneState.postProcess.saoPass.params.saoBlurStdDev = 6.7;
+        this.sceneState.postProcess.saoPass.params.saoBlurDepthCutoff = 0.043;
         this.composer.addPass(this.sceneState.postProcess.saoPass);
+
         this.sceneState.postProcess.unrealBloom = new UnrealBloomPass(
             new THREE.Vector2(
                 this.getScreenResolution().x,
                 this.getScreenResolution().y
-            ), 0.3, 0.008, 0.3);
+            ), 0.22, 0.008, 0.3);
         this.sceneState.postProcess.unrealBloom.enabled = this.sceneState.settings.useBloom;
         this.composer.addPass(this.sceneState.postProcess.unrealBloom);
+
         this.sceneState.postProcess.smaa = new SMAAPass(
             window.innerWidth * (window.devicePixelRatio || 1),
             window.innerHeight * (window.devicePixelRatio || 1)
         );
         this.sceneState.postProcess.smaa.enabled = this.sceneState.settings.useSmaa;
         this.composer.addPass(this.sceneState.postProcess.smaa);
+
         this.sceneState.postProcess.composer = this.composer;
         // Setup postprocessing [/END]
+
+        // GUI setup [START]
+        const gui = new GUI();
+        this.addGuiItems(gui);
+        this.sceneState.gui = gui;
+        // GUI setup [/END]
 
         this.runApp(camera, this.sceneState);
     }
@@ -159,7 +166,7 @@ class Root {
         const delta = this.sceneState.clock.getDelta();
         const player = this.sceneState.player;
         this.updatePhysics(delta);
-        this.updateCameraAndPostProcessing(player);
+        this.updateCamera(player);
         this.sceneState.uiClass.renderLoop(this.sceneState);
         this.sceneState.levelClass.isPlayerDead(player);
         this.composer.render();
@@ -167,19 +174,24 @@ class Root {
         if(this.sceneState.settings.showStats) this.stats.update(); // Debug statistics
     }
 
-    updateCameraAndPostProcessing(player) {
+    updateCamera(player) {
         // Camera
         if(!this.sceneState.settings.lockCamera) return;
+        const pos = player.body.position;
+        const backMesh = this.sceneState.backgroundMesh;
         this.camera.position.set(
-            player.body.position.x + 1,
-            player.body.position.y + 1,
-            player.body.position.z + 15
+            pos.x + 1,
+            pos.y + 1,
+            pos.z + 15
         );
         this.camera.lookAt(new THREE.Vector3(
-            player.body.position.x,
-            player.body.position.y,
-            player.body.position.z
+            pos.x,
+            pos.y,
+            pos.z
         ));
+        backMesh.position.x = this.camera.position.x;
+        backMesh.position.y = this.camera.position.y;
+        backMesh.quaternion.copy(this.camera.quaternion);
     }
 
     updatePhysics(delta) {
@@ -279,7 +291,7 @@ class Root {
     }
 
     addGuiItems(gui) {
-        gui.close();
+        // gui.close();
         gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
         gui.add(this.sceneState.settings, 'showVeloMeters').name('Show velo meters');
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
@@ -294,26 +306,27 @@ class Root {
         gui.add(this.sceneState.settings, 'useBloom').name('Post: use Bloom').onChange((value) => {
             this.sceneState.postProcess.unrealBloom.enabled = value;
         });
+        console.log(this.sceneState.postProcess.unrealBloom);
 
-        // const unrealParams = {
-        //     exposure: 1.2,
-        //     bloomStrength: 0.3,
-        //     bloomThreshold: 0.3,
-        //     bloomRadius: 0.008
-        // };
-        // gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
-        // gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
-        // gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
-        // gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
-        // gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
+        const unrealParams = {
+            exposure: 1.05,
+            bloomStrength: 0.22,
+            bloomThreshold: 0.08,
+            bloomRadius: 0.008
+        };
+        gui.add(unrealParams, 'exposure', 0.1, 2 ).onChange((value) => { this.renderer.toneMappingExposure = Math.pow(value, 4.0); });
+        gui.add(unrealParams, 'bloomThreshold', 0.0, 1.0 ).step( 0.01 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.threshold = Number( value ); });
+        gui.add(unrealParams, 'bloomStrength', 0.0, 3.0 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.strength = Number( value ); });
+        gui.add(unrealParams, 'bloomRadius', 0.0, 1.0 ).step( 0.00001 ).onChange((value) => { this.sceneState.postProcess.unrealBloom.radius = Number( value ); });
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBias', - 1, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoIntensity', 0, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoScale', 0, 10 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoKernelRadius', 1, 100 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoMinResolution', 0, 1 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlur' );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurRadius', 0, 200 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurStdDev', 0.5, 150 );
+        gui.add(this.sceneState.postProcess.saoPass.params, 'saoBlurDepthCutoff', 0.0, 0.1 );
     }
 }
 

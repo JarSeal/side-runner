@@ -40,7 +40,6 @@ class Player {
 
     createPlayer(level) {
         // Add a box
-        console.log(this.player);
         const bSize = this.player.fullSizeMesh;
         const bPos = level.getStartPosition();
         const boxGeo = new THREE.BoxBufferGeometry(bSize[0], bSize[1], bSize[2]);

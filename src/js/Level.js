@@ -15,6 +15,7 @@ class Level {
         this.createBoxPlane([20, 0.2, 2], [46.2, 8.82, 0]);
 
         this.createRandomBoxes();
+        this.createBackground();
     }
 
     createBoxPlane(size, pos, rotation, color, addToGui) {
@@ -137,6 +138,56 @@ class Level {
             player.zIroning = false;
             this.sceneState.playerClass.doTumbling(true);
         }
+    }
+
+    createBackground() {
+        const backgroundZPos = -30;
+        const camera = this.sceneState.camera;
+        const ang_rad = camera.fov * Math.PI / 180;
+        const fov_y = (camera.position.z + Math.abs(backgroundZPos) + 12) * Math.tan(ang_rad / 2) * 2;
+        const backPlane = new THREE.PlaneBufferGeometry(fov_y * camera.aspect, fov_y, 1, 1);
+        const texture = new THREE.TextureLoader().load('/images/background1-blur.png');
+        const backMat = new THREE.ShaderMaterial(this.getBackgroundMaterial(texture));
+        // const backMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const backMesh = new THREE.Mesh(backPlane, backMat);
+        backMesh.position.set(camera.position.x, camera.position.y, backgroundZPos);
+        backMesh.quaternion.copy(camera.quaternion);
+        this.sceneState.scene.add(backMesh);
+        this.sceneState.backgroundMesh = backMesh;
+    }
+
+    getBackgroundMaterial(texture) {
+        const uniforms = {
+            mapTexture: { type: 't', value: texture }
+        };
+        const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`;
+
+        const fragmentShader = `
+        uniform sampler2D mapTexture;
+        varying vec2 vUv;
+
+        void main() {
+            vec3 colorBottom = vec3(0.75, 0.0, 0.0);
+            vec3 colorTop = vec3(0.0, 0.0, 0.0);
+            vec3 color = mix(colorBottom, colorTop, vUv.y + 0.2);
+
+            gl_FragColor = vec4(color, vUv);
+
+            vec4 texMex = texture2D(mapTexture, vUv);
+            gl_FragColor = vec4(texMex);
+        }`;
+
+        return {
+            uniforms: uniforms,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            side: THREE.DoubleSide
+        };
     }
 }
 
