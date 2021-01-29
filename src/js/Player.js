@@ -5,6 +5,7 @@ import { TimelineMax } from 'gsap-ssr';
 class Player {
     constructor(sceneState, level) {
         this.sceneState = sceneState;
+        this.raycaster = new THREE.Raycaster();
         this.player = {
             mesh: null,
             body: null,
@@ -21,6 +22,7 @@ class Player {
                 leftInterval: null,
                 rightInterval: null
             },
+            isGrounded: false,
             yDir: 0,
             yDirPhase: 0,
             zDir: 0,
@@ -38,6 +40,7 @@ class Player {
 
     createPlayer(level) {
         // Add a box
+        console.log(this.player);
         const bSize = this.player.fullSizeMesh;
         const bPos = level.getStartPosition();
         const boxGeo = new THREE.BoxBufferGeometry(bSize[0], bSize[1], bSize[2]);
@@ -69,14 +72,23 @@ class Player {
         this.setupCollisionEvent(boxBody);
     }
 
-    isPlayerGrounded() {
-        let curY = parseFloat(this.player.body.position.y.toFixed(5));
-        const player = this.player;
-        return player.sleepState === 2 ||
-            performance.now() - player.lastCollisionTime < 50 ||
-            (player.lastCollisionHeight > curY - 0.1 &&
-            player.lastCollisionHeight < curY + 0.1) ||
-            (player.angledTilt !== 0);
+    isPlayerGrounded = () => {
+        const player = this.player,
+            startPoint = player.mesh.position,
+            direction = new THREE.Vector3();
+        direction.subVectors(new THREE.Vector3(player.mesh.position.x, -2000, 0), startPoint).normalize();
+        this.raycaster.set(startPoint, direction, true);
+        let intersects = this.raycaster.intersectObjects(this.sceneState.isGroundMeshes),
+            isGrounded = false;
+        if(intersects && intersects.length) {
+            if(player.angledTilt) {
+                if(intersects[0].distance < 0.55) isGrounded = true;
+            } else {
+                if(intersects[0].distance < 0.7) isGrounded = true;
+            }
+        }
+        player.isGrounded = isGrounded;
+        return isGrounded;
     }
 
     setupCollisionEvent(body) {
@@ -106,8 +118,6 @@ class Player {
                 if(Math.abs(xVelo) > this.player.causeDamageVeloLimit2 || Math.abs(yVelo) > this.player.causeDamageVeloLimit2) {
                     console.log('TAKE DAMAGE!', yVelo);
                 }
-                this.player.lastCollisionTime = performance.now();
-                this.player.lastCollisionHeight = parseFloat(body.position.y.toFixed(5));
                 const bodyPos = this.player.body.quaternion;
                 this.setAngledTilt(planeAngle);
                 if(bodyPos.z < -0.3 || bodyPos.z > 0.3) {
@@ -152,16 +162,6 @@ class Player {
                 }
             }
         });
-        let prevY = 0;
-        setInterval(() => {
-            if(body.sleepState !== 2) {
-                const curY = parseFloat(body.position.y.toFixed(5));
-                if(body.position.y === prevY) {
-                    this.player.lastCollisionHeight = curY;
-                }
-                prevY = curY;
-            }
-        }, 200);
     }
 
     getPlayer() {
@@ -305,7 +305,6 @@ class Player {
 
     setAngledTilt(angle) {
         if(this.player.angledTilt === angle) return;
-        if(this.player.angledTiltInterval) clearInterval(this.player.angledTiltInterval);
         if(angle) {
             // TEMP TRANSFORMATION, replace with tumbling when model is imported
             this.player.mesh.scale.x = 2;
@@ -314,13 +313,6 @@ class Player {
             this.player.body.shapes[0].halfExtents.y = this.player.fullSizeBody[1] * 0.75;
             this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
             this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
-            this.player.angledTiltInterval = setInterval(() => {
-                const bodyVelo = this.player.body.velocity;
-                const threshold = this.player.maxSpeed;
-                if(bodyVelo.x > threshold || bodyVelo.y > threshold) {
-                    this.setAngledTilt(0);
-                }
-            }, 70);
         } else {
             // TEMP TRANSFORMATION, replace with tumbling when model is imported
             this.player.mesh.scale.y = 1;
@@ -329,7 +321,6 @@ class Player {
             this.player.body.shapes[0].halfExtents.y = this.player.fullSizeBody[1];
             this.player.body.shapes[0].boundingSphereRadiusNeedsUpdate = true;
             this.player.body.shapes[0].updateConvexPolyhedronRepresentation();
-            this.player.angledTiltInterval = null;
         }
         this.player.angledTilt = angle;
         this.player.body.quaternion.setFromEuler(0, 0, angle, 'XYZ');
@@ -343,12 +334,14 @@ class Player {
     }
 
     updateFn = () => {
+        const bodyVelo = this.player.body.velocity,
+            bodyAVelo = this.player.body.angularVelocity,
+            absAVelo = Math.abs(bodyAVelo.z);
         if(this.isPlayerGrounded()) {
-            const bodyVelo = this.player.body.velocity,
-                bodyAVelo = this.player.body.angularVelocity;
             if(Math.abs(bodyVelo.y) < 0.1) bodyVelo.y = 0;
-            if(Math.abs(bodyAVelo.z) < 0.2) bodyAVelo.z = 0;
+            if(absAVelo < 0.2) bodyAVelo.z = 0;
         }
+        if(absAVelo > 8.5) this.setAngledTilt(0);
     }
 }
 

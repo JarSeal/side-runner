@@ -93,6 +93,7 @@ class Root {
             useSmaa: false
         };
         this.sceneState.settings = { ...this.sceneState.defaultSettings };
+        this.sceneState.isGroundMeshes = [];
         this.initResizer();
         // Other setup [/END]
 
@@ -167,9 +168,6 @@ class Root {
     }
 
     updateCameraAndPostProcessing(player) {
-        // Post processing
-        
-
         // Camera
         if(!this.sceneState.settings.lockCamera) return;
         this.camera.position.set(
@@ -205,16 +203,14 @@ class Root {
     addShapeToPhysics = (object, moving, helperColor) => {
         const mesh = object.mesh,
             body = object.body,
-            updateFn = object.updateFn || null;
+            updateFn = object.updateFn || null,
+            id = 'phyShape-' + performance.now();
+        mesh.name = id;
+        body.bodyID = id;
         if(!this.sceneState.settings.showPhysicsHelpers) this.scene.add(mesh);
         this.world.addBody(body);
         if(moving) {
-            this.sceneState.physics.shapes.push({
-                id: 'phyShape-' + performance.now(),
-                mesh,
-                body,
-                updateFn
-            });
+            this.sceneState.physics.shapes.push({ id, mesh, body, updateFn });
         }
         this.sceneState.physics.shapesLength = this.sceneState.physics.shapes.length;
         if(this.sceneState.settings.showPhysicsHelpers) {

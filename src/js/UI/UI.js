@@ -89,7 +89,7 @@ class UI {
                 this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x.toFixed(2);
                 this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y.toFixed(2);
                 this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z.toFixed(2);
-                const isGrounded = sceneState.playerClass.isPlayerGrounded();
+                const isGrounded = sceneState.player.isGrounded;
                 this.anims.veloMeters.groundedElem.innerHTML = isGrounded;
                 if(isGrounded) {
                     this.anims.veloMeters.groundedElem.style.color = 'green';
