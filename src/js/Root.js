@@ -7,6 +7,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { SAOPass } from 'three/examples/jsm/postprocessing/SAOPass.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module.js';
+import { TimelineMax } from 'gsap-ssr';
 import * as Stats from './vendor/stats.min.js';
 import CannonHelper from './vendor/CannonHelper.js';
 import Level from './Level.js';
@@ -47,6 +48,9 @@ class Root {
         const cameraControls = new OrbitControls(camera, renderer.domElement);
         cameraControls.update();
         this.cameraControls = cameraControls;
+        this.cameraPan = { x: 2 };
+        this.cameraMicroPan = { x: 0, y: 0 };
+        this.cameraPanTL = null;
         this.camera = camera;
         this.sceneState.camera = camera;
         // Setup camera and aspect ratio [/END]
@@ -157,6 +161,7 @@ class Root {
         // Main app logic [/END]
 
         this.resize(this.sceneState, this.renderer);
+        this.cameraMicroMove();
         this.renderLoop();
 
     }
@@ -179,19 +184,49 @@ class Root {
         if(!this.sceneState.settings.lockCamera) return;
         const pos = player.body.position;
         const backMesh = this.sceneState.backgroundMesh;
+        const panLimits = {
+            xPositive: 2,
+            xNegative: -2
+        };
+        let time;
+        if (this.cameraPan.x < panLimits.xPositive &&
+            player.moveButtonDown.left)
+        {
+            time = (performance.now() - player.moveButtonDown.leftStarted) / 1000;
+            this.cameraPan.x += time / 5 * panLimits.xPositive;
+        } else if (this.cameraPan.x > panLimits.xNegative &&
+            player.moveButtonDown.right)
+        {
+            time = (performance.now() - player.moveButtonDown.rightStarted) / 1000;
+            this.cameraPan.x += time / 5 * panLimits.xNegative;
+        }
         this.camera.position.set(
-            pos.x + -2,
-            pos.y + 3,
+            pos.x + this.cameraPan.x + this.cameraMicroPan.x,
+            pos.y + 4 + this.cameraMicroPan.y,
             pos.z + 15
         );
         this.camera.lookAt(new THREE.Vector3(
             pos.x,
-            pos.y,
+            pos.y + 1,
             pos.z
         ));
         backMesh.position.x = this.camera.position.x;
         backMesh.position.y = this.camera.position.y;
         backMesh.quaternion.copy(this.camera.quaternion);
+    }
+
+    cameraMicroMove() {
+        const time = Math.floor(Math.random() * (7 - 5 + 1) + 5);
+        const xDir = Math.random() < 0.5 ? 1 : -1;
+        const yDir = Math.random() < 0.5 ? 1 : -1;
+        const amount = Math.floor(Math.random() * (35 - 15 + 1) + 15) / 100;
+        this.cameraPanTL = new TimelineMax().to(this.cameraMicroPan, time, {
+            x: amount * xDir,
+            y: amount * yDir,
+            onComplete: () => {
+                this.cameraMicroMove();
+            }
+        });
     }
 
     updatePhysics(delta) {
@@ -291,7 +326,7 @@ class Root {
     }
 
     addGuiItems(gui) {
-        // gui.close();
+        gui.close();
         gui.add(this.sceneState.settings, 'lockCamera').name('Lock camera');
         gui.add(this.sceneState.settings, 'showVeloMeters').name('Show velo meters');
         gui.add(this.sceneState.settings, 'showStats').name('Show stats').onChange((value) => {
@@ -306,7 +341,6 @@ class Root {
         gui.add(this.sceneState.settings, 'useBloom').name('Post: use Bloom').onChange((value) => {
             this.sceneState.postProcess.unrealBloom.enabled = value;
         });
-        console.log(this.sceneState.postProcess.unrealBloom);
 
         const unrealParams = {
             exposure: 1.05,

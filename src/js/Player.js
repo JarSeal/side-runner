@@ -20,7 +20,9 @@ class Player {
                 left: false,
                 right: false,
                 leftInterval: null,
-                rightInterval: null
+                rightInterval: null,
+                leftStarted: null,
+                rightStarted: null
             },
             isGrounded: false,
             yDir: 0,
@@ -209,6 +211,7 @@ class Player {
         let velo = this.player.body.velocity,
             aVelo = this.player.body.angularVelocity;
         this.player.body.wakeUp();
+        this.player.moveButtonDown[dir+'Started'] = performance.now();
         this.player.moveButtonDown[dir] = true;
         clearInterval(this.player.moveButtonDown['rightInterval']);
         clearInterval(this.player.moveButtonDown['leftInterval']);
