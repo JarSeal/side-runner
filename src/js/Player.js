@@ -71,11 +71,12 @@ class Player {
 
     isPlayerGrounded() {
         let curY = parseFloat(this.player.body.position.y.toFixed(5));
-        // console.log('isPlayherGrounded:');
-        return performance.now() - this.player.lastCollisionTime < 50 ||
-            (this.player.lastCollisionHeight > curY - 0.1 &&
-            this.player.lastCollisionHeight < curY + 0.1) ||
-            (this.player.angledTilt !== 0);
+        const player = this.player;
+        return player.sleepState === 2 ||
+            performance.now() - player.lastCollisionTime < 50 ||
+            (player.lastCollisionHeight > curY - 0.1 &&
+            player.lastCollisionHeight < curY + 0.1) ||
+            (player.angledTilt !== 0);
     }
 
     setupCollisionEvent(body) {
@@ -83,6 +84,7 @@ class Player {
         const upAxis = new CANNON.Vec3(0, 1, 0);
         body.addEventListener('collide', (e) => {
             const contact = e.contact;
+            console.log('colliding');
             const yVelo = this.player.body.velocity.y;
             const xVelo = this.player.body.velocity.x;
             const aVelo = this.player.body.velocity.z;
