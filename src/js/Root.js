@@ -22,7 +22,7 @@ class Root {
         const renderer = new THREE.WebGLRenderer();
         renderer.setClearColor('#000000');
         renderer.toneMapping = THREE.ReinhardToneMapping;
-        renderer.toneMappingExposure = Math.pow(1.2, 4.0);
+        renderer.toneMappingExposure = Math.pow(1.1, 4.0);
         const screenSize = this.getScreenResolution();
         renderer.setSize(screenSize.x, screenSize.y);
         renderer.domElement.id = 'main-stage';
@@ -32,7 +32,7 @@ class Root {
 
         // Setup scene and basic lights [START]
         const scene = new THREE.Scene();
-        const hemi = new THREE.HemisphereLight(0xbe8338, 0xbcc29f, 1);
+        const hemi = new THREE.HemisphereLight(0xfefefe, 0x080808, 1);
         hemi.position.set(32, 32, 5);
         scene.add(hemi);
         scene.add(new THREE.AmbientLight(0xffffff, 0.25));
@@ -180,8 +180,8 @@ class Root {
         const pos = player.body.position;
         const backMesh = this.sceneState.backgroundMesh;
         this.camera.position.set(
-            pos.x + 1,
-            pos.y + 1,
+            pos.x + -2,
+            pos.y + 3,
             pos.z + 15
         );
         this.camera.lookAt(new THREE.Vector3(
