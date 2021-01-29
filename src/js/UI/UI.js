@@ -89,7 +89,13 @@ class UI {
                 this.anims.veloMeters.xVeloElem.innerHTML = sceneState.player.body.velocity.x.toFixed(2);
                 this.anims.veloMeters.yVeloElem.innerHTML = sceneState.player.body.velocity.y.toFixed(2);
                 this.anims.veloMeters.aVeloElem.innerHTML = sceneState.player.body.angularVelocity.z.toFixed(2);
-                this.anims.veloMeters.groundedElem.innerHTML = sceneState.playerClass.isPlayerGrounded();
+                const isGrounded = sceneState.playerClass.isPlayerGrounded();
+                this.anims.veloMeters.groundedElem.innerHTML = isGrounded;
+                if(isGrounded) {
+                    this.anims.veloMeters.groundedElem.style.color = 'green';
+                } else {
+                    this.anims.veloMeters.groundedElem.style.color = 'red';
+                }
             },
             removeFn: () => {
                 const elem = document.getElementById('veloMeters');
