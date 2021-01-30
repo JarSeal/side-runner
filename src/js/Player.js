@@ -188,6 +188,9 @@ class Player {
             if(time < 170) time = 170;
             const jumpStrength = time / maxTarget * this.player.maxJumpStrength;
             this.player.body.velocity.y = jumpStrength;
+            setTimeout(() => {
+                if(!this.player.isGrounded) this.setAngledTilt(0);
+            }, 250);
         }
     }
 
